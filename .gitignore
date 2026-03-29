@@ -1,0 +1,17 @@
+# Ignore global Node modules
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Mac OS
+.DS_Store
+
+# IDEs
+.idea/
+.vscode/
+
+# Build
+target/
+build/
+dist/
