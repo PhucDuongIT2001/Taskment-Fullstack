@@ -1,0 +1,89 @@
+.container {
+    padding: 40px;
+    background-color: #f8f9fa;
+    min-height: 100vh;
+}
+.title {
+    text-align: center;
+    color: #2c3e50;
+    margin-bottom: 40px;
+}
+.task-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 25px;
+}
+.card {
+    background: white;
+    padding: 20px;
+    border-radius: 15px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    border-top: 5px solid #3498db;
+}
+.delete-btn {
+    background: #e74c3c;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    padding: 5px 10px;
+    cursor: pointer;
+}
+
+/* --- CÁC CLASS MỚI CHO TASKCARD --- */
+
+/* Sử dụng Flexbox để đẩy tiêu đề sang trái và nút xóa sang phải */
+.card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+}
+
+/* Bỏ margin mặc định của thẻ h3 để card nhìn gọn gàng hơn */
+.card-title {
+    margin: 0;
+    font-size: 1.2rem;
+}
+
+.card-desc {
+    color: #555;
+    font-size: 0.95rem;
+    margin-bottom: 15px;
+}
+
+/* Flexbox để các nhãn (badge) nằm ngang hàng. Gap tạo khoảng cách đều nhau. */
+.card-badges {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap; /* Cho phép rớt xuống dòng nếu thẻ bị thu nhỏ */
+}
+
+/* Style dùng chung cho tất cả các nhãn (badge) */
+.badge {
+    padding: 5px 10px;
+    border-radius: 6px;
+    font-size: 0.85rem;
+    font-weight: 500;
+}
+
+/* Tùy chỉnh màu sắc riêng cho nhãn dự án */
+.badge-project {
+    background-color: #e1f5fe;
+    color: #0288d1;
+}
+
+/* Tùy chỉnh màu sắc riêng cho nhãn trạng thái */
+.badge-status {
+    background-color: #f6ffed;
+    color: #52c41a;
+    border: 1px solid #b7eb8f;
+}
+
+/* Định dạng phần chân thẻ (footer) */
+.card-footer {
+    margin-top: 15px;
+    padding-top: 15px;
+    border-top: 1px dashed #ecf0f1; /* Đường kẻ đứt nét để phân cách */
+    font-size: 0.85rem;
+    color: #7f8c8d;
+}
