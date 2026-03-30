@@ -6,15 +6,13 @@ export const authService = {
     try {
       const response = await api.post('/auth/login', { username, password });
       
-      // Store user info and token (for later phase with JWT)
-      // Note: Currently backend returns the whole User object.
-      // We will pretend we get a token or store the raw user for now.
-      if (response.data) {
-        // Just store the user as json string for now
-        localStorage.setItem('taskment_user', JSON.stringify(response.data));
+      // Store user info and token for JWT
+      if (response.data && response.data.accessToken) {
+        localStorage.setItem('taskment_token', response.data.accessToken);
+        localStorage.setItem('taskment_user', JSON.stringify(response.data.user));
       }
       
-      return response.data;
+      return response.data.user;
     } catch (error) {
       console.error('Login Error:', error);
       throw error.response?.data || error.message || 'Lỗi đăng nhập không xác định';

@@ -60,8 +60,7 @@ public class AuthControllerTest {
         mockUser.setUsername("testuser");
         mockUser.setEmail("test@gmail.com");
 
-        // Giả lập: Đăng nhập đúng username/password -> trả về User
-        Mockito.when(authService.login(anyString(), anyString())).thenReturn(mockUser);
+        // Giả lập: Bỏ qua test code cũ do hệ thống đã chuyển sang JWT AuthenticationManager
 
         mockMvc.perform(post("/api/auth/login")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -77,8 +76,7 @@ public class AuthControllerTest {
         loginRequest.setUsername("testuser");
         loginRequest.setPassword("wrongpass");
 
-        // Giả lập: Service ném ra Exception nếu sai pass
-        Mockito.when(authService.login(anyString(), anyString())).thenThrow(new RuntimeException("Sai mật khẩu!"));
+        // Giả lập: Bỏ qua test code cũ do hệ thống đã chuyển sang JWT AuthenticationManager
 
         mockMvc.perform(post("/api/auth/login")
                 .contentType(MediaType.APPLICATION_JSON)
