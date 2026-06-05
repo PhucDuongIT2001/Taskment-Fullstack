@@ -13,7 +13,8 @@ public class EmailService {
     private final JavaMailSender mailSender;
     
     // Đường dẫn gốc của Frontend để gắn link vào Email
-    private final String FRONTEND_URL = "http://localhost:3001";
+    @org.springframework.beans.factory.annotation.Value("${app.frontend-url:http://localhost:3001}")
+    private String FRONTEND_URL;
 
     public EmailService(JavaMailSender mailSender) {
         this.mailSender = mailSender;

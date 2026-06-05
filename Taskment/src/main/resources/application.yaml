@@ -53,3 +53,7 @@ gemini:
 
 server:
   port: 8888
+
+app:
+  frontend-url: ${FRONTEND_URL:http://localhost:3001}
+
