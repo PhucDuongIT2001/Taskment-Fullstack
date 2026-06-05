@@ -23,8 +23,8 @@ public class ProjectMember {
     private User user;
 
     //Roles
-    @Column(nullable = false)
-    private String role;
+    @Column(name = "role_in_project", nullable = false)
+    private String roleInProject = "MEMBER";
 
     @Column(name="joined_at")
     private LocalDateTime joinedAt;
@@ -64,12 +64,12 @@ public class ProjectMember {
         this.user = user;
     }
 
-    public String getRole() {
-        return role;
+    public String getRoleInProject() {
+        return roleInProject;
     }
 
-    public void setRole(String role) {
-        this.role = role;
+    public void setRoleInProject(String roleInProject) {
+        this.roleInProject = roleInProject;
     }
 
     public LocalDateTime getJoinedAt() {

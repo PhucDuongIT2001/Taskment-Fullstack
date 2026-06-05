@@ -1,50 +1,93 @@
-import { useState } from 'react';
-import AuthService from './AuthService';
+import { useState, useEffect } from 'react';
+import AuthService, { extractErrorMessage } from './services/AuthService';
+import { toast } from 'react-toastify';
 
 const useAuth = () => {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  // Thêm state để lưu thông tin người dùng đang đăng nhập
+  const [isAuthenticated, setIsAuthenticated] = useState(!!localStorage.getItem("token"));
   const [currentUser, setCurrentUser] = useState(null);
+  const [loading, setLoading] = useState(!!localStorage.getItem("token")); // Loading if we have a token to verify
+
+  useEffect(() => {
+    const fetchUser = async () => {
+      const token = localStorage.getItem("token");
+      if (token) {
+        try {
+          const user = await AuthService.getCurrentUser();
+          if (user) {
+            setCurrentUser(user);
+            setIsAuthenticated(true);
+          } else {
+            setIsAuthenticated(false);
+          }
+        } catch (e) {
+          setIsAuthenticated(false);
+        }
+      }
+      setLoading(false);
+    };
+    fetchUser();
+  }, []);
 
   // Hàm xử lý đăng nhập
   const login = async (email, password) => {
     try {
       const response = await AuthService.login(email, password);
+      if (response.requires2FA) {
+        return { requires2FA: true, username: response.username, message: response.message };
+      }
       if (response.success) {
         setIsAuthenticated(true);
-        setCurrentUser(response.user); // Lưu dữ liệu user từ Backend trả về
-        alert("Đăng nhập thành công!");
-        return true; // Trả về true báo hiệu form đã xử lý xong
+        setCurrentUser(response.user);
+        return true;
       }
     } catch (error) {
       console.error("Lỗi đăng nhập:", error);
-      alert(error.message || "Đăng nhập thất bại!");
+      return extractErrorMessage(error, "Đăng nhập thất bại!");
     }
-    return false;
+    return "Đăng nhập thất bại!";
+  };
+
+  const verify2FA = async (username, otp) => {
+    try {
+      const response = await AuthService.verify2FA(username, otp);
+      if (response.success) {
+        setIsAuthenticated(true);
+        setCurrentUser(response.user);
+        return true;
+      }
+    } catch (error) {
+      console.error("Lỗi xác thực 2FA:", error);
+      return extractErrorMessage(error, "Xác thực OTP thất bại!");
+    }
+    return "Xác thực OTP thất bại!";
   };
 
   // Hàm xử lý đăng ký
-  const register = async (fullName, email, password, dateOfBirth, avatarUrl) => {
+  const register = async (username, fullName, email, password, confirmPassword, dateOfBirth, firstName, lastName, phoneNumber, address, roleName) => {
     try {
-      const response = await AuthService.register(fullName, email, password, dateOfBirth, avatarUrl);
+      const response = await AuthService.register(username, fullName, email, password, confirmPassword, dateOfBirth, firstName, lastName, phoneNumber, address, roleName);
       if (response.success) {
-        alert("Đăng ký thành công! Vui lòng đăng nhập.");
         return true;
       }
     } catch (error) {
       console.error("Lỗi đăng ký:", error);
-      alert(error.message || "Đăng ký thất bại!");
+      return extractErrorMessage(error, "Đăng ký thất bại!");
     }
-    return false;
+    return "Đăng ký thất bại!";
   };
 
   const logout = () => {
+    localStorage.removeItem("token"); // XÓA TOKEN KHI ĐĂNG XUẤT
     setIsAuthenticated(false);
-    setCurrentUser(null); // Xóa thông tin khi đăng xuất
+    setCurrentUser(null);
+    toast.info("Đã đăng xuất thành công!", {
+      icon: "🚪",
+      style: { borderRadius: '10px', fontWeight: 'bold' }
+    });
   };
 
   // Nhớ trả về thêm currentUser
-  return { isAuthenticated, currentUser, login, register, logout };
+  return { isAuthenticated, currentUser, login, verify2FA, register, logout, loading };
 };
 
 export default useAuth;

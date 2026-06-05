@@ -13,6 +13,9 @@ public class DataInitializer implements CommandLineRunner {
     private UserRepository userRepository;
 
     @Autowired
+    private RoleRepository roleRepository;
+
+    @Autowired
     private TaskStatusRepository taskStatusRepository;
 
     @Autowired
@@ -23,6 +26,15 @@ public class DataInitializer implements CommandLineRunner {
 
     @Override
     public void run(String... args) throws Exception {
+
+        // 0. ===== SEED ROLES (BẮT BUỘC - đăng ký tài khoản phụ thuộc vào đây) =====
+        if (roleRepository.count() == 0) {
+            roleRepository.save(new Role("ROLE_ADMIN",         "Quản trị viên"));
+            roleRepository.save(new Role("ROLE_STAFF_LEADER",  "Trưởng nhóm"));
+            roleRepository.save(new Role("ROLE_STAFF_MEMBER",  "Nhân viên"));
+            roleRepository.save(new Role("ROLE_CUSTOMER",      "Khách hàng"));
+            System.out.println(">> Đã khởi tạo danh sách Roles!");
+        }
 
         // 1. Tạo Status mẫu (Nếu chưa có)
         if (taskStatusRepository.count() == 0) {
@@ -47,14 +59,15 @@ public class DataInitializer implements CommandLineRunner {
             admin.setEmail("admin@example.com");
             admin.setPassword("123");
             admin.setFullName("Quản trị viên");
+            admin.setEnabled(true);
             userRepository.save(admin);
             System.out.println(">> Đã tạo User Admin mẫu!");
         }
 
         // 4. Đảm bảo có ít nhất 1 Project để test (ID = 1)
         if (projectRepository.count() == 0) {
-            User owner = userRepository.findAll().get(0);
-            Project p = new Project("Dự án Mẫu", "Mô tả dự án test", "ACTIVE", owner);
+            User leader = userRepository.findAll().get(0);
+            Project p = new Project("Dự án Mẫu", "Mô tả dự án test", "ACTIVE", leader);
             projectRepository.save(p);
             System.out.println(">> Đã tạo Project mẫu!");
         }

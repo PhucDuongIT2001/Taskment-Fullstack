@@ -1,7 +1,6 @@
 package com.example.Taskment.entity;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 
@@ -19,55 +18,53 @@ public class Task {
     @Column(columnDefinition = "TEXT")
     private String description;
 
-    @Column(name = "due_date")
-    private LocalDateTime dueDate;
+    @Column(name = "story_points")
+    private Integer storyPoints;
 
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
 
+    @Column(name = "due_date")
+    private LocalDateTime dueDate;
+
     // --- CÁC MỐI QUAN HỆ (RELATIONSHIPS) ---
 
-    // 1. Task thuộc về một dự án nào đó
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "project_id", nullable = false)
-    @JsonIgnoreProperties({"tasks","hibernateLazyInitializer", "handler"})
+    @JsonBackReference // Đánh dấu đây là "phần con" của mối quan hệ
     private Project project;
 
-    // 2. Người thực hiện công việc (Assignee)
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "assignee_id")
-    @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
-    private User assignee;
-
-    // 3. Người tạo/báo cáo công việc (Reporter)
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "reporter_id")
-    @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
-    private User reporter;
-
-    // 4. Trạng thái của Task (Kết nối với bảng task_status)
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "status_id")
-    @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
     private TaskStatus status;
 
-    // 5. Mức độ ưu tiên (Kết nối với bảng priorities)
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "priority_id")
-    @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
     private Priority priority;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "issue_type_id")
+    private IssueType issueType;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "sprint_id")
+    private Sprint sprint;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "parent_id")
+    private Task parentTask;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "reporter_id")
+    private User reporter;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "assignee_id")
+    private User assignee;
 
     // --- CONSTRUCTOR ---
 
     public Task() {
-    }
-
-    // Constructor có tham số để tạo nhanh Task
-    public Task(String title, String description, Project project, User reporter) {
-        this.title = title;
-        this.description = description;
-        this.project = project;
-        this.reporter = reporter;
     }
 
     // Tự động gán ngày tạo
@@ -87,24 +84,36 @@ public class Task {
     public String getDescription() { return description; }
     public void setDescription(String description) { this.description = description; }
 
-    public LocalDateTime getDueDate() { return dueDate; }
-    public void setDueDate(LocalDateTime dueDate) { this.dueDate = dueDate; }
+    public Integer getStoryPoints() { return storyPoints; }
+    public void setStoryPoints(Integer storyPoints) { this.storyPoints = storyPoints; }
 
     public LocalDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
 
+    public LocalDateTime getDueDate() { return dueDate; }
+    public void setDueDate(LocalDateTime dueDate) { this.dueDate = dueDate; }
+
     public Project getProject() { return project; }
     public void setProject(Project project) { this.project = project; }
-
-    public User getAssignee() { return assignee; }
-    public void setAssignee(User assignee) { this.assignee = assignee; }
-
-    public User getReporter() { return reporter; }
-    public void setReporter(User reporter) { this.reporter = reporter; }
 
     public TaskStatus getStatus() { return status; }
     public void setStatus(TaskStatus status) { this.status = status; }
 
     public Priority getPriority() { return priority; }
     public void setPriority(Priority priority) { this.priority = priority; }
+
+    public IssueType getIssueType() { return issueType; }
+    public void setIssueType(IssueType issueType) { this.issueType = issueType; }
+
+    public Sprint getSprint() { return sprint; }
+    public void setSprint(Sprint sprint) { this.sprint = sprint; }
+
+    public Task getParentTask() { return parentTask; }
+    public void setParentTask(Task parentTask) { this.parentTask = parentTask; }
+
+    public User getReporter() { return reporter; }
+    public void setReporter(User reporter) { this.reporter = reporter; }
+
+    public User getAssignee() { return assignee; }
+    public void setAssignee(User assignee) { this.assignee = assignee; }
 }

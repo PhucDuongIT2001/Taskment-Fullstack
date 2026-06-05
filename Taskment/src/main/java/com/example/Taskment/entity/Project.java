@@ -1,7 +1,10 @@
 package com.example.Taskment.entity;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
+import java.util.HashSet;
+import java.util.Set;
 
 @Entity
 @Table(name="projects")
@@ -22,29 +25,36 @@ public class Project {
     @Column(name="create_at")
     private LocalDateTime createAt;
 
+    @Column(name="due_date")
+    private LocalDateTime dueDate;
+
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name="owner_id")
-    private User owner;
+    @JoinColumn(name="leader_id")
+    private User leader;
+
+    // --- MỐI QUAN HỆ HAI CHIỀU (BIDIRECTIONAL) ---
+    @OneToMany(mappedBy = "project", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    @JsonManagedReference // Dùng để tránh lỗi vòng lặp vô hạn khi parse JSON
+    private Set<Task> tasks = new HashSet<>();
 
     // CONSTRUCTOR
 
     public Project() {
     }
-    public Project(String name, String description, String status, User owner) {
+    public Project(String name, String description, String status, User leader) {
         this.name = name;
         this.description = description;
         this.status = status;
-        this.owner = owner;
-
+        this.leader = leader;
     }
+    
     // GAN NGAY TAO
     @PrePersist
     public void prePersist() {
         this.createAt = LocalDateTime.now();
     }
 
-    //GET VA SET
-
+    // --- GETTER AND SETTER ---
 
     public Long getId() {
         return id;
@@ -54,12 +64,12 @@ public class Project {
         this.id = id;
     }
 
-    public User getOwner() {
-        return owner;
+    public User getLeader() {
+        return leader;
     }
 
-    public void setOwner(User owner) {
-        this.owner = owner;
+    public void setLeader(User leader) {
+        this.leader = leader;
     }
 
     public String getName() {
@@ -92,5 +102,21 @@ public class Project {
 
     public void setCreateAt(LocalDateTime createAt) {
         this.createAt = createAt;
+    }
+
+    public LocalDateTime getDueDate() {
+        return dueDate;
+    }
+
+    public void setDueDate(LocalDateTime dueDate) {
+        this.dueDate = dueDate;
+    }
+
+    public Set<Task> getTasks() {
+        return tasks;
+    }
+
+    public void setTasks(Set<Task> tasks) {
+        this.tasks = tasks;
     }
 }

@@ -1,0 +1,29 @@
+version: '3.8'
+
+services:
+  taskment_app:
+    build: .
+    container_name: taskment_app
+    restart: always
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:mysql://pdshop_mysql:3306/task_management_ai?allowPublicKeyRetrieval=true&useSSL=false
+      - SPRING_DATASOURCE_USERNAME=root
+      - SPRING_DATASOURCE_PASSWORD=rootpassword
+      - SPRING_JPA_HIBERNATE_DDL_AUTO=update
+    networks:
+      - pd-shop-main_default
+
+  frontend:
+    build: ./taskment-frontend
+    container_name: taskment-frontend
+    restart: always
+    ports:
+      - "3000:80"
+    depends_on:
+      - taskment_app
+    networks:
+      - pd-shop-main_default
+
+networks:
+  pd-shop-main_default:
+    external: true

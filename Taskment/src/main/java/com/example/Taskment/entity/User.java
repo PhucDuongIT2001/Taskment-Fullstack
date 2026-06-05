@@ -1,8 +1,6 @@
 package com.example.Taskment.entity;
 
-import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 import java.util.HashSet;
@@ -19,46 +17,57 @@ public class User {
     @Column(nullable = false, unique = true)
     private String username;
 
-    @Column(nullable = false, unique = true) // Nên để unique cho email
+    @Column(nullable = false, unique = true)
     private String email;
 
-    @Column(nullable = false) // Bỏ unique ở password (người dùng có thể đặt pass giống nhau)
+    @Column(nullable = false)
     @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     private String password;
 
     @Column(name = "full_name")
     private String fullName;
 
-    @Column(name = "avatar_url")
-    private String avatarUrl;
-
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
 
-    @Column(name = "updated_at")
-    private LocalDateTime updatedAt;
+    @Column(nullable = false) // THÊM MỚI: Trường enabled
+    private boolean enabled = false; // Mặc định là false (chưa xác thực)
 
-    // Tạm thời dùng JsonIgnore để Postman không bị lỗi vòng lặp khi chưa có file Role chuẩn
-    @ManyToMany(fetch = FetchType.LAZY)
+    // --- THÊM MỚI CHO TÍNH NĂNG QUÊN MẬT KHẨU ---
+    @Column(name = "reset_password_token")
+    private String resetPasswordToken;
+
+    @Column(name = "reset_password_token_expiry")
+    private LocalDateTime resetPasswordTokenExpiry;
+    // --- KẾT THÚC THÊM MỚI ---
+    
+    // --- THÊM MỚI CHO TÍNH NĂNG 2FA ---
+    @Column(name = "two_factor_otp")
+    private String twoFactorOtp;
+
+    @Column(name = "two_factor_otp_expiry")
+    private LocalDateTime twoFactorOtpExpiry;
+    // --- KẾT THÚC THÊM MỚI ---
+
+    // --- CÁC MỐI QUAN HỆ ---
+
+    @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
             name = "user_roles",
             joinColumns = @JoinColumn(name = "user_id"),
             inverseJoinColumns = @JoinColumn(name = "role_id")
     )
-    @JsonIgnore
     private Set<Role> roles = new HashSet<>();
+
+    // Quan hệ 1-1 với HumanInfo (Profile)
+    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private HumanInfo humanInfo;
 
     public User() {}
 
     @PrePersist
     protected void onCreate() {
         this.createdAt = LocalDateTime.now();
-        this.updatedAt = LocalDateTime.now();
-    }
-
-    @PreUpdate
-    protected void onUpdate() {
-        this.updatedAt = LocalDateTime.now();
     }
 
     // --- GETTER AND SETTER ---
@@ -77,15 +86,28 @@ public class User {
     public String getFullName() { return fullName; }
     public void setFullName(String fullName) { this.fullName = fullName; }
 
-    public String getAvatarUrl() { return avatarUrl; }
-    public void setAvatarUrl(String avatarUrl) { this.avatarUrl = avatarUrl; }
-
     public LocalDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
 
-    public LocalDateTime getUpdatedAt() { return updatedAt; }
-    public void setUpdatedAt(LocalDateTime updatedAt) { this.updatedAt = updatedAt; }
-
     public Set<Role> getRoles() { return roles; }
     public void setRoles(Set<Role> roles) { this.roles = roles; }
+
+    public HumanInfo getHumanInfo() { return humanInfo; }
+    public void setHumanInfo(HumanInfo humanInfo) { this.humanInfo = humanInfo; }
+
+    // --- GETTER AND SETTER CHO CÁC TRƯỜNG MỚI ---
+    public boolean isEnabled() { return enabled; } // Getter cho enabled
+    public void setEnabled(boolean enabled) { this.enabled = enabled; } // Setter cho enabled
+
+    public String getResetPasswordToken() { return resetPasswordToken; }
+    public void setResetPasswordToken(String resetPasswordToken) { this.resetPasswordToken = resetPasswordToken; }
+
+    public LocalDateTime getResetPasswordTokenExpiry() { return resetPasswordTokenExpiry; }
+    public void setResetPasswordTokenExpiry(LocalDateTime resetPasswordTokenExpiry) { this.resetPasswordTokenExpiry = resetPasswordTokenExpiry; }
+
+    public String getTwoFactorOtp() { return twoFactorOtp; }
+    public void setTwoFactorOtp(String twoFactorOtp) { this.twoFactorOtp = twoFactorOtp; }
+
+    public LocalDateTime getTwoFactorOtpExpiry() { return twoFactorOtpExpiry; }
+    public void setTwoFactorOtpExpiry(LocalDateTime twoFactorOtpExpiry) { this.twoFactorOtpExpiry = twoFactorOtpExpiry; }
 }

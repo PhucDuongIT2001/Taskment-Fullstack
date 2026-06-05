@@ -7,6 +7,9 @@ import java.util.Optional;
 
 @Repository
 public interface RoleRepository extends JpaRepository<Role, Long> {
-    // Tìm vai trò theo tên (ví dụ: "ROLE_USER", "ROLE_ADMIN")
+    // Tìm vai trò theo mã (ví dụ: "ROLE_CUSTOMER", "ROLE_ADMIN")
+    Optional<Role> findByRole(String role);
+
+    // Tìm vai trò theo tên hiển thị (ví dụ: "customer")
     Optional<Role> findByName(String name);
 }

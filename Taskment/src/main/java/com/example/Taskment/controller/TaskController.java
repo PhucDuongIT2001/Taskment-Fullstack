@@ -1,120 +1,90 @@
 package com.example.Taskment.controller;
 
-import com.example.Taskment.entity.*;
-import com.example.Taskment.repository.*;
-import org.springframework.beans.factory.annotation.Autowired;
+import com.example.Taskment.dto.CustomerRequestDTO;
+import com.example.Taskment.dto.TaskRequestDTO;
+import com.example.Taskment.dto.TaskResponseDTO;
+import com.example.Taskment.dto.UpdateTaskStatusRequest;
+import com.example.Taskment.service.TaskService;
+import jakarta.validation.Valid;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-@CrossOrigin(origins = "*")
 @RestController
 @RequestMapping("/api/tasks")
 public class TaskController {
 
-    @Autowired
-    private TaskRepository taskRepository;
+    private final TaskService taskService;
 
-    @Autowired
-    private ProjectRepository projectRepository;
+    public TaskController(TaskService taskService) {
+        this.taskService = taskService;
+    }
 
-    @Autowired
-    private UserRepository userRepository;
-
-    @Autowired
-    private TaskStatusRepository taskStatusRepository;
-
-    @Autowired
-    private PriorityRepository priorityRepository;
-
-    // 1. Lấy danh sách tất cả Task
     @GetMapping
-    public List<Task> getAllTasks() {
-        return taskRepository.findAll();
+    public ResponseEntity<List<TaskResponseDTO>> getMyTasks(Authentication authentication) {
+        String username = authentication.getName();
+        return ResponseEntity.ok(taskService.getMyTasks(username));
     }
 
-    @PostMapping("/project/{projectId}/reporter/{reporterId}/assignee/{assigneeId}/status/{statusId}/priority/{priorityId}")
-    public Task createTask(
-            @PathVariable Long projectId,
-            @PathVariable Long reporterId,
-            @PathVariable Long assigneeId,
-            @PathVariable Long statusId,
-            @PathVariable Long priorityId,
-            @RequestBody Task task) {
-
-        // 1. Tìm các thực thể cơ bản
-        Project project = projectRepository.findById(projectId)
-                .orElseThrow(() -> new RuntimeException("Không tìm thấy Project ID: " + projectId));
-
-        User reporter = userRepository.findById(reporterId)
-                .orElseThrow(() -> new RuntimeException("Không tìm thấy User (Reporter) ID: " + reporterId));
-
-        User assignee = userRepository.findById(assigneeId)
-                .orElseThrow(() -> new RuntimeException("Không tìm thấy User (Assignee) ID: " + assigneeId));
-
-        // 2. Tìm Status và Priority (Mảnh ghép mới giúp hết lỗi 404)
-        TaskStatus status = taskStatusRepository.findById(statusId)
-                .orElseThrow(() -> new RuntimeException("Không tìm thấy Status ID: " + statusId));
-
-        Priority priority = priorityRepository.findById(priorityId)
-                .orElseThrow(() -> new RuntimeException("Không tìm thấy Priority ID: " + priorityId));
-
-        // 3. Gán tất cả vào Task
-        task.setProject(project);
-        task.setReporter(reporter);
-        task.setAssignee(assignee);
-        task.setStatus(status);
-        task.setPriority(priority);
-
-        // 4. Lưu vào Database
-        return taskRepository.save(task);
+    @GetMapping("/project/{projectId}")
+    public ResponseEntity<List<TaskResponseDTO>> getTasksByProjectId(@PathVariable Long projectId) {
+        return ResponseEntity.ok(taskService.getTasksByProjectId(projectId));
     }
-    // 3. READ ONE: Xem chi tiết 1 Task
+
+    @GetMapping("/my-requests")
+    public ResponseEntity<List<TaskResponseDTO>> getMyRequests(Authentication authentication) {
+        String username = authentication.getName();
+        return ResponseEntity.ok(taskService.getTasksByReporter(username));
+    }
+
+    @GetMapping("/all")
+    public ResponseEntity<List<TaskResponseDTO>> getAllTasks() {
+        return ResponseEntity.ok(taskService.getAllTasks());
+    }
+
     @GetMapping("/{id}")
-    public ResponseEntity<Task> getTaskById(@PathVariable Long id) {
-        return taskRepository.findById(id)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+    public ResponseEntity<TaskResponseDTO> getTaskById(@PathVariable Long id) {
+        return ResponseEntity.ok(taskService.getTaskById(id));
     }
 
-    // 4. UPDATE: Cập nhật thông tin Task
-    // PUT http://localhost:8080/api/tasks/1
+    @PostMapping
+    @org.springframework.security.access.prepost.PreAuthorize("@projectSecurity.canCreateTaskInProject(authentication, #request.projectId)")
+    public ResponseEntity<TaskResponseDTO> createTask(@RequestBody TaskRequestDTO request, Authentication authentication) {
+        String username = authentication.getName();
+        return new ResponseEntity<>(taskService.createTask(request, username), HttpStatus.CREATED);
+    }
+
+    @PostMapping("/customer-request")
+    public ResponseEntity<TaskResponseDTO> createCustomerRequest(
+            @Valid @RequestBody CustomerRequestDTO requestDTO,
+            Authentication authentication) {
+        String username = authentication.getName();
+        return new ResponseEntity<>(taskService.createCustomerRequest(requestDTO, username), HttpStatus.CREATED);
+    }
+
     @PutMapping("/{id}")
-    public ResponseEntity<Task> updateTask(@PathVariable Long id, @RequestBody Task taskDetails) {
-        return taskRepository.findById(id).map(task -> {
-            // Cập nhật các thông tin cơ bản
-            if (taskDetails.getTitle() != null) task.setTitle(taskDetails.getTitle());
-            if (taskDetails.getDescription() != null) task.setDescription(taskDetails.getDescription());
-            if (taskDetails.getDueDate() != null) task.setDueDate(taskDetails.getDueDate());
-
-            // Lưu ý: Nếu muốn đổi Project/Assignee thì nên làm API riêng hoặc check null kỹ ở đây
-
-            Task updatedTask = taskRepository.save(task);
-            return ResponseEntity.ok(updatedTask);
-        }).orElse(ResponseEntity.notFound().build());
+    @org.springframework.security.access.prepost.PreAuthorize("@projectSecurity.canManageTask(authentication, #id)")
+    public ResponseEntity<TaskResponseDTO> updateTask(@PathVariable Long id, @RequestBody TaskRequestDTO request) {
+        return ResponseEntity.ok(taskService.updateTask(id, request));
     }
 
-    // 5. UPDATE STATUS: API riêng để đổi trạng thái (Rất hay dùng)
-    // PATCH http://localhost:8080/api/tasks/1/status/3
-    @PatchMapping("/{taskId}/status/{statusId}")
-    public ResponseEntity<?> updateTaskStatus(@PathVariable Long taskId, @PathVariable Long statusId) {
-        Task task = taskRepository.findById(taskId)
-                .orElseThrow(() -> new RuntimeException("Không thấy Task"));
-        TaskStatus status = taskStatusRepository.findById(statusId)
-                .orElseThrow(() -> new RuntimeException("Không thấy Status"));
-
-        task.setStatus(status);
-        taskRepository.save(task);
-        return ResponseEntity.ok("Đã chuyển trạng thái Task sang: " + status.getName());
+    @PutMapping("/{taskId}/status")
+    @org.springframework.security.access.prepost.PreAuthorize("@projectSecurity.canManageTask(authentication, #taskId)")
+    public ResponseEntity<TaskResponseDTO> updateTaskStatus(
+            @PathVariable Long taskId,
+            @Valid @RequestBody UpdateTaskStatusRequest request,
+            Authentication authentication) {
+        String username = authentication.getName();
+        return ResponseEntity.ok(taskService.updateTaskStatus(taskId, request.getNewStatusId(), username));
     }
 
-    // 6. DELETE: Xóa Task
     @DeleteMapping("/{id}")
-    public ResponseEntity<?> deleteTask(@PathVariable Long id) {
-        return taskRepository.findById(id).map(task -> {
-            taskRepository.delete(task);
-            return ResponseEntity.ok().body("Đã xóa Task thành công!");
-        }).orElse(ResponseEntity.notFound().build());
+    @org.springframework.security.access.prepost.PreAuthorize("@projectSecurity.canManageTask(authentication, #id)")
+    public ResponseEntity<Void> deleteTask(@PathVariable Long id) {
+        taskService.deleteTask(id);
+        return ResponseEntity.noContent().build();
     }
-    }
+}

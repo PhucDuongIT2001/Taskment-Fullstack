@@ -1,0 +1,7 @@
+.git/
+taskment-frontend/
+target/
+.idea/
+.vscode/
+uploads/
+*.log

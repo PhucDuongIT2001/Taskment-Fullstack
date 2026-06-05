@@ -1,18 +1,27 @@
-.profile-container {
-  max-width: 800px;
+.profile-page-layout {
+  display: grid;
+  grid-template-columns: 280px 1fr; /* Sidebar 280px, Main Content tự động */
+  gap: 30px;
+  max-width: 1200px; /* Tăng chiều rộng tối đa */
   margin: 40px auto;
-  padding: 20px;
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  animation: fadeIn 0.5s;
 }
 
-.profile-header {
+.profile-sidebar {
+  padding: 20px;
+  border-radius: 18px;
+  height: fit-content; /* Sidebar chỉ cao bằng nội dung */
+  box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+  background: white;
+}
+
+.profile-avatar-section {
   display: flex;
+  flex-direction: column;
   align-items: center;
-  background: #ffffff;
-  padding: 30px;
-  border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-  margin-bottom: 30px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid #eee;
+  margin-bottom: 20px;
 }
 
 .profile-avatar {
@@ -20,77 +29,187 @@
   height: 120px;
   border-radius: 50%;
   object-fit: cover;
-  border: 4px solid #2ecc71;
-  margin-right: 30px;
+  border: 4px solid var(--fb-blue);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  margin-bottom: 15px;
 }
 
-.profile-info-basic {
+.profile-sidebar-name {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin: 0 0 5px 0;
+  color: var(--text-main);
+}
+
+.profile-sidebar-email {
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+  margin: 0;
+}
+
+.profile-nav {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 10px;
 }
 
-.profile-name {
-  margin: 0;
-  font-size: 24px;
-  color: #2c3e50;
+.profile-nav-item {
+  background: none;
+  border: none;
+  padding: 12px 15px;
+  text-align: left;
+  font-size: 1rem;
+  color: var(--text-main);
+  cursor: pointer;
+  border-radius: 8px;
+  transition: background-color 0.2s, color 0.2s;
 }
 
-.profile-email, .profile-dob {
-  margin: 0;
-  font-size: 15px;
-  color: #7f8c8d;
+.profile-nav-item:hover {
+  background-color: #f0f2f5;
 }
 
-.profile-projects-section {
-  background: #ffffff;
-  padding: 30px;
-  border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+.profile-nav-item.active {
+  background-color: var(--fb-blue);
+  color: white;
+  font-weight: 600;
 }
 
-.section-title {
-  margin-top: 0;
-  margin-bottom: 20px;
-  color: #2c3e50;
-  border-bottom: 2px solid #ecf0f1;
-  padding-bottom: 10px;
+.profile-nav-item.active:hover {
+  background-color: var(--fb-blue-hover);
 }
 
-.projects-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+.profile-main-content {
+  display: flex;
+  flex-direction: column;
   gap: 20px;
 }
 
-.project-card {
-  background: #f8f9fa;
-  border-left: 4px solid #3498db;
-  padding: 15px;
-  border-radius: 8px;
-  transition: transform 0.2s;
+.profile-section {
+  background: white;
+  padding: 25px;
+  border-radius: 18px;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.05);
 }
 
-.project-card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+.profile-section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: 15px;
+  margin-bottom: 20px;
+  border-bottom: 1px solid #eee;
 }
 
-.project-title {
-  margin: 0 0 10px 0;
-  color: #2980b9;
-  font-size: 16px;
+.profile-section-header h2 {
+  margin: 0;
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: var(--text-main);
 }
 
-.project-role, .project-status {
-  margin: 5px 0;
-  font-size: 13px;
-  color: #555;
+.profile-section-header .submit-btn.small,
+.profile-section-header .cancel-btn.small {
+  padding: 8px 15px;
+  font-size: 0.9rem;
+  border-radius: 6px;
 }
 
-.project-status {
-  display: inline-block;
-  background: #e1f5fe;
-  padding: 3px 8px;
-  border-radius: 4px;
+/* Form elements */
+.form-group {
+    margin-bottom: 15px;
+}
+
+.form-group label {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #4b5563;
+  margin-bottom: 6px;
+  display: block;
+  text-align: left;
+}
+
+input[type="text"],
+input[type="email"],
+input[type="tel"],
+input[type="date"],
+input[type="url"],
+input[type="password"],
+textarea {
+  width: 100%;
+  box-sizing: border-box;
+  background: #f9fafb;
+  border: 2px solid #e5e7eb;
+  border-radius: 10px;
+  padding: 11px;
+  font-size: 0.95rem;
+}
+
+input:disabled, textarea:disabled {
+    background-color: #e9ecef;
+    cursor: not-allowed;
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 15px;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.submit-btn.primary {
+  background: var(--fb-blue);
+  color: white;
+  border: none;
+  padding: 12px 20px;
+  border-radius: 10px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+.submit-btn.primary:hover {
+  background: var(--fb-blue-hover);
+}
+
+.cancel-btn {
+  background: #f3f4f6;
+  border: none;
+  padding: 12px 20px;
+  border-radius: 10px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+.cancel-btn:hover {
+  background: #e4e6eb;
+}
+
+.profile-loading, .profile-error {
+    text-align: center;
+    font-size: 1.2rem;
+    padding: 50px;
+    color: #555;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .profile-page-layout {
+    grid-template-columns: 1fr; /* Stack columns */
+    margin: 20px auto;
+    padding: 0 15px;
+  }
+
+  .profile-sidebar {
+    border-radius: 18px 18px 0 0;
+  }
+
+  .profile-main-content {
+    padding-top: 0;
+  }
 }

@@ -1,72 +1,101 @@
 package com.example.Taskment.controller;
 
-import com.example.Taskment.entity.Project;
-import com.example.Taskment.entity.User;
-import com.example.Taskment.repository.ProjectRepository;
-import com.example.Taskment.repository.UserRepository;
-import org.springframework.beans.factory.annotation.Autowired;
+import com.example.Taskment.dto.ProjectRequestDTO;
+import com.example.Taskment.dto.ProjectResponseDTO;
+import com.example.Taskment.dto.TaskResponseDTO;
+import com.example.Taskment.service.ProjectService;
+import com.example.Taskment.service.TaskService;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
+import com.example.Taskment.service.ExcelReportService;
+import org.springframework.core.io.InputStreamResource;
+import org.springframework.core.io.Resource;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+
+import java.io.ByteArrayInputStream;
 import java.util.List;
 
 @RestController
 @RequestMapping("/api/projects")
 public class ProjectController {
 
-    @Autowired
-    private ProjectRepository projectRepository;
+    private final ProjectService projectService;
+    private final TaskService taskService;
+    private final ExcelReportService excelReportService; // MỚI THÊM
 
-    @Autowired
-    private UserRepository userRepository;
+    public ProjectController(ProjectService projectService, TaskService taskService, ExcelReportService excelReportService) {
+        this.projectService = projectService;
+        this.taskService = taskService;
+        this.excelReportService = excelReportService;
+    }
 
-    // 1. Lấy toàn bộ danh sách dự án
+    @GetMapping("/{id}/export")
+    public ResponseEntity<Resource> exportProjectTasksToExcel(@PathVariable Long id) {
+        ProjectResponseDTO project = projectService.getProjectById(id);
+        List<TaskResponseDTO> tasks = taskService.getTasksByProjectId(id);
+
+        ByteArrayInputStream in = excelReportService.generateProjectReport(project, tasks);
+        InputStreamResource file = new InputStreamResource(in);
+
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=bao_cao_du_an_" + id + ".xlsx")
+                .contentType(MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
+                .body(file);
+    }
+
     @GetMapping
-    public List<Project> getAllProjects() {
-        return projectRepository.findAll();
+    @org.springframework.security.access.prepost.PreAuthorize("hasAnyRole('ADMIN', 'STAFF_LEADER', 'STAFF_MEMBER')")
+    public ResponseEntity<List<ProjectResponseDTO>> getAllProjects() {
+        return ResponseEntity.ok(projectService.getAllProjects());
     }
-    //  GET ONE: Xem chi tiết 1 dự án theo ID
+
+    @GetMapping("/my") // API MỚI
+    public ResponseEntity<?> getMyProjects(
+            Authentication authentication,
+            @RequestParam(value = "page", defaultValue = "0", required = false) int pageNo,
+            @RequestParam(value = "size", defaultValue = "10", required = false) int pageSize,
+            @RequestParam(value = "sortBy", defaultValue = "id", required = false) String sortBy,
+            @RequestParam(value = "sortDir", defaultValue = "asc", required = false) String sortDir,
+            @RequestParam(value = "paged", defaultValue = "false", required = false) boolean paged) {
+        
+        if (paged) {
+            return ResponseEntity.ok(projectService.getMyProjectsPaginated(authentication.getName(), pageNo, pageSize, sortBy, sortDir));
+        }
+        return ResponseEntity.ok(projectService.getMyProjects(authentication.getName()));
+    }
+
     @GetMapping("/{id}")
-    public ResponseEntity<Project> getProjectById(@PathVariable Long id) {
-        return projectRepository.findById(id)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+    public ResponseEntity<ProjectResponseDTO> getProjectById(@PathVariable Long id) {
+        return ResponseEntity.ok(projectService.getProjectById(id));
     }
-    //  POST: Tạo dự án mới gắn với một User cụ thể
-    @PostMapping("/{ownerId}")
-    public Project createProject(@PathVariable Long ownerId, @RequestBody Project project) {
-        // Tìm User (chủ sở hữu) từ database
-        User owner = userRepository.findById(ownerId)
-                .orElseThrow(() -> new RuntimeException("Không tìm thấy User với ID: " + ownerId));
 
-        // Gán chủ sở hữu cho dự án
-        project.setOwner(owner);
-
-        // Lưu dự án vào database
-        return projectRepository.save(project);
+    @GetMapping("/{projectId}/tasks")
+    public ResponseEntity<List<TaskResponseDTO>> getTasksByProjectId(@PathVariable Long projectId) {
+        return ResponseEntity.ok(taskService.getTasksByProjectId(projectId));
     }
-    // PUT: Sửa thông tin dự án (Tên, Mô tả, Trạng thái)
+
+    @PostMapping
+    public ResponseEntity<ProjectResponseDTO> createProject(@RequestBody ProjectRequestDTO requestDTO) {
+        ProjectResponseDTO createdProject = projectService.createProject(requestDTO);
+        return new ResponseEntity<>(createdProject, HttpStatus.CREATED);
+    }
+
     @PutMapping("/{id}")
-    public ResponseEntity<Project> updateProject(@PathVariable Long id, @RequestBody Project projectDetails) {
-        return projectRepository.findById(id).map(project -> {
-            project.setName(projectDetails.getName());
-            project.setDescription(projectDetails.getDescription());
-            project.setStatus(projectDetails.getStatus());
-            Project updatedProject = projectRepository.save(project);
-            return ResponseEntity.ok(updatedProject);
-        }).orElse(ResponseEntity.notFound().build());
+    @org.springframework.security.access.prepost.PreAuthorize("@projectSecurity.isProjectLeader(authentication, #id)")
+    public ResponseEntity<?> updateProject(@PathVariable Long id, @RequestBody ProjectRequestDTO projectDetails, Authentication authentication) {
+        ProjectResponseDTO updatedProject = projectService.updateProject(id, projectDetails, authentication.getName());
+        return ResponseEntity.ok(updatedProject);
     }
-    // DELETE: Xóa dự án
+
     @DeleteMapping("/{id}")
-    public ResponseEntity<?> deleteProject(@PathVariable Long id) {
-        return projectRepository.findById(id).map(project -> {
-            projectRepository.delete(project);
-            return ResponseEntity.ok().body("Đã xóa dự án thành công!");
-        }).orElse(ResponseEntity.notFound().build());
-    }
-    // SEARCH: Tìm kiếm dự án theo tên (Tận dụng Repository bạn vừa viết)
-    @GetMapping("/search")
-    public List<Project> searchProjects(@RequestParam String name) {
-        return projectRepository.findByNameContainingIgnoreCase(name);
+    @org.springframework.security.access.prepost.PreAuthorize("@projectSecurity.isProjectLeader(authentication, #id)")
+    public ResponseEntity<?> deleteProject(@PathVariable Long id, Authentication authentication) {
+        projectService.deleteProject(id, authentication.getName());
+        return ResponseEntity.noContent().build();
     }
 }

@@ -1,89 +1,938 @@
+/* Base Styles */
+:root {
+  --primary-bg: #f5f7fa;
+  --card-bg: #ffffff;
+  --text-main: #2d3436;
+  --text-secondary: #636e72;
+  --fb-blue: #1877f2;
+  --fb-blue-hover: #166fe5;
+  --danger: #e74c3c;
+  --success: #2ecc71;
+}
+
+body {
+  margin: 0;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  background-color: var(--primary-bg);
+  color: var(--text-main);
+}
+
 .container {
-    padding: 40px;
-    background-color: #f8f9fa;
-    min-height: 100vh;
+  padding: 30px;
+  max-width: 1400px;
+  margin: 0 auto;
 }
+
+/* Toolbar & Navigation */
+.toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px 25px;
+  background: white;
+  border-radius: 15px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+  margin-bottom: 30px;
+  position: sticky;
+  top: 15px;
+  z-index: 100;
+}
+
+.nav-btn {
+  padding: 10px 18px;
+  border-radius: 10px;
+  border: none;
+  background: #f0f2f5;
+  color: #65676b;
+  font-weight: 600;
+  cursor: pointer;
+  margin-right: 10px;
+  transition: all 0.2s;
+}
+
+.nav-btn.active {
+  background: #e7f3ff;
+  color: var(--fb-blue);
+}
+
+.add-task-btn {
+  background: var(--fb-blue);
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 10px;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 4px 8px rgba(24, 119, 242, 0.2);
+}
+
+.logout-btn {
+  background: #fee2e2;
+  color: #d32f2f;
+  border: 1px solid #fecaca;
+  padding: 10px 18px;
+  border-radius: 10px;
+  font-weight: 600;
+  cursor: pointer;
+  margin-left: 10px;
+  transition: all 0.25s ease;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.logout-btn:hover {
+  background: #fecaca;
+  color: #c62828;
+  box-shadow: 0 4px 12px rgba(211, 47, 47, 0.15);
+  transform: translateY(-2px);
+}
+
+.logout-btn:active {
+  transform: translateY(0);
+}
+
+/* Main Layout */
+.main-layout {
+  display: grid;
+  grid-template-columns: 280px 1fr;
+  gap: 30px;
+}
+
+/* Responsive adjustments for main layout */
+@media (max-width: 992px) {
+  .main-layout {
+    grid-template-columns: 1fr; /* Stack columns on smaller screens */
+    gap: 20px; /* Adjust gap for smaller screens */
+  }
+  .project-sidebar {
+    height: auto; /* Allow sidebar to take natural height */
+  }
+}
+
+.project-sidebar {
+  background: white;
+  padding: 24px;
+  border-radius: 15px;
+  height: fit-content;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.04);
+}
+
+.content-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 25px;
+}
+
 .title {
-    text-align: center;
-    color: #2c3e50;
-    margin-bottom: 40px;
+  margin: 0;
+  font-size: 1.6rem;
+  font-weight: 800;
 }
+
+.task-count {
+  font-weight: 600;
+  color: var(--text-secondary);
+  background: #e4e6eb;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 0.85rem;
+}
+
+/* Task Cards Grid */
 .task-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-    gap: 25px;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 25px;
 }
+
+/* Card Styling */
 .card {
-    background: white;
-    padding: 20px;
-    border-radius: 15px;
-    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-    border-top: 5px solid #3498db;
-}
-.delete-btn {
-    background: #e74c3c;
-    color: white;
-    border: none;
-    border-radius: 5px;
-    padding: 5px 10px;
-    cursor: pointer;
+  background: white;
+  border-radius: 18px;
+  padding: 22px;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  border: 1px solid rgba(0,0,0,0.05);
+  display: flex;
+  flex-direction: column;
 }
 
-/* --- CÁC CLASS MỚI CHO TASKCARD --- */
+/* Separate hover effect for interactive cards */
+.card.card-interactive:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 15px 30px rgba(0,0,0,0.1);
+}
 
-/* Sử dụng Flexbox để đẩy tiêu đề sang trái và nút xóa sang phải */
+.card-priority-line {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 6px;
+}
+
 .card-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 15px;
 }
 
-/* Bỏ margin mặc định của thẻ h3 để card nhìn gọn gàng hơn */
 .card-title {
-    margin: 0;
-    font-size: 1.2rem;
+  font-size: 1.2rem;
+  font-weight: 700;
+  margin: 0;
+  line-height: 1.3;
+}
+
+.issue-type-badge {
+    color: #555;
+    font-size: 0.8em;
+    margin-right: 5px;
+    font-weight: normal;
+}
+
+.card-actions {
+  display: flex;
+  gap: 8px;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.card.card-interactive:hover .card-actions {
+  opacity: 1;
+}
+
+.edit-icon-btn, .delete-icon-btn {
+  background: #f0f2f5;
+  border: none;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  cursor: pointer;
 }
 
 .card-desc {
-    color: #555;
-    font-size: 0.95rem;
+  font-size: 0.95rem;
+  color: var(--text-secondary);
+  margin-bottom: 20px;
+  flex-grow: 1;
+}
+
+/* Meta & Badges */
+.card-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.badge-group {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.badge-label {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: #8c939d;
+  text-transform: uppercase;
+}
+
+.badge {
+  padding: 4px 12px;
+  border-radius: 8px;
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.badge-project { background: #e7f3ff; color: var(--fb-blue); }
+
+.priority-high { background: #fee2e2; color: #dc2626; }
+.priority-medium { background: #fef3c7; color: #d97706; }
+.priority-low { background: #e0f2fe; color: #0284c7; }
+
+.status-done { background: #dcfce7; color: #16a34a; }
+.status-progress { background: #f3e8ff; color: #9333ea; }
+.status-pending { background: #f3f4f6; color: #4b5563; }
+
+.badge-sprint { background: #fdf4ff; color: #a21caf; } /* Màu tím nhạt cho Sprint */
+
+/* Deadline Styling */
+.card-deadline {
+  padding: 10px;
+  border-radius: 12px;
+  margin-bottom: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+.deadline-overdue {
+  background: #fff1f2;
+  color: #e11d48;
+  border: 1px solid #fda4af;
+  animation: pulse-deadline 2s infinite;
+}
+
+.deadline-upcoming {
+  background: #f0f9ff;
+  color: #0369a1;
+  border: 1px dashed #7dd3fc;
+}
+
+@keyframes pulse-deadline {
+  0% { opacity: 1; }
+  50% { opacity: 0.7; }
+  100% { opacity: 1; }
+}
+
+.deadline-text { font-weight: 800; font-size: 0.85rem; }
+.deadline-date { font-size: 0.7rem; opacity: 0.8; }
+
+/* Footer Info (Story Points, Date) */
+.card-footer-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+    font-size: 0.8rem;
+    color: #6b7280;
+}
+
+.story-points {
+    background-color: #fef9c3;
+    color: #ca8a04;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-weight: bold;
+}
+
+/* Footer */
+.card-footer {
+  padding-top: 15px;
+  border-top: 1px solid #f0f2f5;
+}
+
+.assignee {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.avatar-circle {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--fb-blue);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  font-weight: 800;
+}
+
+.assignee-name { font-size: 0.85rem; font-weight: 600; }
+
+/* Modal Styling */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modal-content {
+  background: white;
+  width: 700px; /* TĂNG CHIỀU RỘNG */
+  max-width: 95%;
+  border-radius: 20px;
+  padding: 30px;
+  box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 25px;
+}
+
+.modal-header h2 { margin: 0; font-size: 1.4rem; font-weight: 800; }
+
+.close-x {
+  background: #f0f2f5;
+  border: none;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  font-size: 1.4rem;
+  cursor: pointer;
+}
+
+.form-group {
     margin-bottom: 15px;
 }
 
-/* Flexbox để các nhãn (badge) nằm ngang hàng. Gap tạo khoảng cách đều nhau. */
-.card-badges {
-    display: flex;
-    gap: 10px;
-    flex-wrap: wrap; /* Cho phép rớt xuống dòng nếu thẻ bị thu nhỏ */
+.form-group label {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #4b5563;
+  margin-bottom: 6px;
+  display: block;
+  text-align: left;
 }
 
-/* Style dùng chung cho tất cả các nhãn (badge) */
-.badge {
-    padding: 5px 10px;
-    border-radius: 6px;
-    font-size: 0.85rem;
-    font-weight: 500;
+input, textarea, select {
+  width: 100%;
+  box-sizing: border-box;
+  background: #f9fafb;
+  border: 2px solid #e5e7eb;
+  border-radius: 10px;
+  padding: 11px;
+  font-size: 0.95rem;
 }
 
-/* Tùy chỉnh màu sắc riêng cho nhãn dự án */
-.badge-project {
-    background-color: #e1f5fe;
-    color: #0288d1;
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+
+/* Responsive adjustments for form rows */
+@media (max-width: 600px) {
+  .form-row {
+    grid-template-columns: 1fr; /* Stack form fields on smaller screens */
+  }
 }
 
-/* Tùy chỉnh màu sắc riêng cho nhãn trạng thái */
-.badge-status {
-    background-color: #f6ffed;
-    color: #52c41a;
-    border: 1px solid #b7eb8f;
+.modal-actions { display: flex; gap: 10px; margin-top: 30px; }
+
+.submit-btn.primary {
+  flex: 2;
+  background: var(--fb-blue);
+  color: white;
+  border: none;
+  padding: 12px;
+  border-radius: 10px;
+  font-weight: 700;
+  cursor: pointer;
 }
 
-/* Định dạng phần chân thẻ (footer) */
-.card-footer {
-    margin-top: 15px;
-    padding-top: 15px;
-    border-top: 1px dashed #ecf0f1; /* Đường kẻ đứt nét để phân cách */
-    font-size: 0.85rem;
-    color: #7f8c8d;
+.cancel-btn {
+  flex: 1;
+  background: #f3f4f6;
+  border: none;
+  padding: 12px;
+  border-radius: 10px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 50px;
+  background: white;
+  border-radius: 15px;
+  border: 2px dashed #e5e7eb;
+  color: #65676b;
+}
+
+/* Chat Styling */
+.chat-bubble {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background-color: var(--fb-blue);
+  color: white;
+  border: none;
+  font-size: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+  z-index: 1002;
+}
+
+.chat-window {
+  position: fixed;
+  bottom: 90px; /* Nâng lên trên nút bubble */
+  right: 20px;
+  width: 350px;
+  height: 450px;
+  display: flex;
+  flex-direction: column;
+  z-index: 1001;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+  border-radius: 18px;
+  overflow: hidden;
+}
+
+.chat-header {
+  background: var(--fb-blue);
+  color: white;
+  padding: 10px 15px;
+}
+
+.message-area {
+  flex-grow: 1;
+  padding: 15px;
+  overflow-y: auto;
+  list-style: none;
+  margin: 0;
+  background-color: #f9fafb;
+}
+
+.chat-message {
+  display: flex;
+  margin-bottom: 15px;
+}
+
+.chat-message .avatar {
+  width: 35px;
+  height: 35px;
+  border-radius: 50%;
+  background: #ccc;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  margin-right: 10px;
+}
+
+.chat-message.own-message {
+  justify-content: flex-end;
+}
+
+.chat-message.own-message .message-content {
+  align-items: flex-end;
+}
+
+.chat-message.own-message .message-text {
+  background-color: var(--fb-blue);
+  color: white;
+}
+
+.message-content {
+  display: flex;
+  flex-direction: column;
+}
+
+.sender-name {
+  font-size: 0.8rem;
+  color: #888;
+  margin-bottom: 4px;
+}
+
+.message-text {
+  background: #e4e6eb;
+  padding: 10px 15px;
+  border-radius: 18px;
+  max-width: 250px;
+}
+
+.event-message {
+  width: 100%;
+  text-align: center;
+  color: #888;
+  font-style: italic;
+  font-size: 0.8rem;
+}
+
+.chat-form {
+  display: flex;
+  padding: 10px;
+  border-top: 1px solid #eee;
+  background: white;
+}
+
+.chat-form input {
+  flex: 1;
+  border-right: none;
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
+}
+
+.chat-form button {
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
+  background: var(--fb-blue);
+  color: white;
+  border: none;
+  cursor: pointer;
+  padding: 0 15px;
+}
+
+/* Notification Bell Styling */
+.notification-bell {
+  position: relative;
+  margin-left: 15px;
+}
+
+.bell-button {
+  background: none;
+  border: none;
+  font-size: 24px;
+  cursor: pointer;
+  position: relative;
+}
+
+.notification-badge {
+  position: absolute;
+  top: -5px;
+  right: -5px;
+  background-color: var(--danger);
+  color: white;
+  border-radius: 50%;
+  width: 18px;
+  height: 18px;
+  font-size: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+}
+
+.notification-dropdown {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  width: 350px;
+  background: white;
+  border-radius: 10px;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+  z-index: 1003;
+  overflow: hidden;
+}
+
+.notification-header {
+  padding: 10px 15px;
+  font-weight: bold;
+  border-bottom: 1px solid #eee;
+}
+
+.notification-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.notification-list li {
+  padding: 15px;
+  border-bottom: 1px solid #eee;
+}
+
+.notification-list li.unread {
+  background-color: #e7f3ff;
+}
+
+.notification-list li a {
+  text-decoration: none;
+  color: inherit;
+}
+
+.no-notifications {
+  text-align: center;
+  color: #888;
+  padding: 20px;
+}
+
+/* Task Detail Page Layout */
+.task-detail-container {
+  display: grid;
+  grid-template-columns: 2fr 1fr; /* Main content 2/3, Sidebar 1/3 */
+  gap: 30px;
+}
+
+.task-detail-main {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.task-detail-sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.task-detail-container .content-header {
+  margin-bottom: 15px;
+}
+
+.task-detail-container .content-header .title {
+  font-size: 1.8rem;
+}
+
+.task-detail-container .badge {
+  padding: 8px 15px;
+  font-size: 0.9rem;
+}
+
+.task-detail-container .edit-icon-btn,
+.task-detail-container .delete-icon-btn {
+  width: 40px;
+  height: 40px;
+  font-size: 1.2rem;
+}
+
+.comment-section .comment-list {
+  max-height: 300px;
+  overflow-y: auto;
+  border: 1px solid #f0f2f5;
+  border-radius: 10px;
+  padding: 15px;
+  margin-bottom: 15px;
+  background-color: #f9fafb;
+}
+
+.comment {
+  display: flex;
+  margin-bottom: 15px;
+  align-items: flex-start;
+}
+
+.comment.own-comment {
+  justify-content: flex-end;
+}
+
+.comment-avatar {
+  width: 35px;
+  height: 35px;
+  border-radius: 50%;
+  background: var(--fb-blue);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  margin-right: 10px;
+  flex-shrink: 0;
+}
+
+.comment.own-comment .comment-avatar {
+  order: 2;
+  margin-left: 10px;
+  margin-right: 0;
+}
+
+.comment-body {
+  background: #e4e6eb;
+  padding: 10px 15px;
+  border-radius: 15px;
+  max-width: 80%;
+}
+
+.comment.own-comment .comment-body {
+  background-color: var(--fb-blue);
+  color: white;
+}
+
+.comment-author {
+  font-weight: 600;
+  font-size: 0.9rem;
+  margin-bottom: 5px;
+  color: #333;
+}
+
+.comment.own-comment .comment-author {
+  color: #fff;
+}
+
+.comment-text {
+  font-size: 0.95rem;
+  line-height: 1.4;
+}
+
+.comment-time {
+  font-size: 0.75rem;
+  color: #888;
+  margin-top: 5px;
+}
+
+.comment.own-comment .comment-time {
+  color: rgba(255,255,255,0.7);
+}
+
+.comment-form {
+  display: flex;
+  gap: 10px;
+  margin-top: 15px;
+}
+
+.comment-form input {
+  flex: 1;
+  border-radius: 10px;
+  border: 1px solid #ccc;
+  padding: 10px;
+}
+
+.comment-form button {
+  background: var(--fb-blue);
+  color: white;
+  border: none;
+  border-radius: 10px;
+  padding: 10px 15px;
+  cursor: pointer;
+}
+
+.detail-item {
+  margin-bottom: 10px;
+  font-size: 0.95rem;
+}
+
+.detail-item strong {
+  color: #333;
+}
+
+.detail-item a {
+  color: var(--fb-blue);
+  text-decoration: none;
+}
+
+.detail-item a:hover {
+  text-decoration: underline;
+}
+
+/* Responsive for Task Detail Page */
+@media (max-width: 768px) {
+  .task-detail-container {
+    grid-template-columns: 1fr; /* Stack columns on smaller screens */
+  }
+}
+
+/* Kanban Board Styling */
+.kanban-board {
+  display: flex;
+  gap: 20px;
+  overflow-x: auto; /* Cho phép cuộn ngang nếu nhiều cột */
+  padding-bottom: 10px; /* Để tránh task bị cắt khi kéo */
+}
+
+.kanban-column {
+  min-width: 300px;
+  width: 300px;
+  background-color: #f0f2f5;
+  border-radius: 10px;
+  padding: 15px;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
+
+.kanban-column h2 {
+  font-size: 1.2rem;
+  font-weight: 700;
+  margin-top: 0;
+  margin-bottom: 15px;
+  color: var(--text-main);
+}
+
+.droppable-area {
+  background-color: #f0f2f5;
+  padding: 10px;
+  border-radius: 8px;
+  flex-grow: 1;
+  min-height: 100px; /* Đảm bảo khu vực kéo thả có chiều cao tối thiểu */
+}
+
+.droppable-area.dragging-over {
+  background-color: #e0e2e5;
+}
+
+.draggable-item {
+  margin-bottom: 10px;
+}
+
+.draggable-item .card {
+  padding: 15px;
+  border-radius: 10px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+}
+
+.draggable-item.dragging .card {
+  box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+  transform: rotate(3deg);
+}
+
+/* Project Detail Page Layout */
+.project-detail-layout {
+  display: grid;
+  grid-template-columns: 2fr 1fr; /* Main content 2/3, Sidebar 1/3 */
+  gap: 30px;
+}
+
+.project-main-content {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.project-sidebar-content {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* Responsive for Project Detail Page */
+@media (max-width: 992px) {
+  .project-detail-layout {
+    grid-template-columns: 1fr; /* Stack columns on smaller screens */
+  }
+}
+
+/* Action buttons for tables/lists */
+.action-btn-view, .action-btn-edit, .action-btn-delete {
+  padding: 5px 10px;
+  border-radius: 4px;
+  border: 1px solid;
+  cursor: pointer;
+  font-size: 0.85rem;
+  transition: all 0.2s;
+  text-decoration: none; /* For Link components */
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.action-btn-view {
+  background-color: #e7f3ff;
+  border-color: #a8d9ff;
+  color: var(--fb-blue);
+}
+.action-btn-view:hover {
+  background-color: #d0e8ff;
+}
+
+.action-btn-edit {
+  background-color: #fffbe6;
+  border-color: #ffe58f;
+  color: #d97706;
+}
+.action-btn-edit:hover {
+  background-color: #fff3cd;
+}
+
+.action-btn-delete {
+  background-color: #fee2e2;
+  border-color: #ffccc7;
+  color: #d32f2f;
+}
+.action-btn-delete:hover {
+  background-color: #ffc2c2;
 }

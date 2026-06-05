@@ -12,10 +12,55 @@ export const authService = {
         localStorage.setItem('taskment_user', JSON.stringify(response.data.user));
       }
       
-      return response.data.user;
+      return response.data;
     } catch (error) {
       console.error('Login Error:', error);
       throw error.response?.data || error.message || 'Lỗi đăng nhập không xác định';
+    }
+  },
+
+  // Verify 2FA OTP method
+  verify2FA: async (username, otp) => {
+    try {
+      const response = await api.post('/auth/verify-2fa', { username, otp });
+      
+      if (response.data && response.data.accessToken) {
+        localStorage.setItem('taskment_token', response.data.accessToken);
+        localStorage.setItem('taskment_user', JSON.stringify(response.data.user));
+      }
+      
+      return response.data.user;
+    } catch (error) {
+      console.error('2FA Verification Error:', error);
+      throw error.response?.data || error.message || 'Mã OTP không chính xác hoặc đã hết hạn';
+    }
+  },
+
+  // Resend 2FA OTP method
+  resend2FA: async (username) => {
+    try {
+      const response = await api.post('/auth/resend-2fa', { username });
+      return response.data;
+    } catch (error) {
+      console.error('2FA Resend Error:', error);
+      throw error.response?.data || error.message || 'Không thể gửi lại mã OTP';
+    }
+  },
+
+  // Google Login method
+  loginWithGoogle: async (code) => {
+    try {
+      const response = await api.post('/auth/google', { code });
+      
+      if (response.data && response.data.accessToken) {
+        localStorage.setItem('taskment_token', response.data.accessToken);
+        localStorage.setItem('taskment_user', JSON.stringify(response.data.user));
+      }
+      
+      return response.data.user;
+    } catch (error) {
+      console.error('Google Login Error:', error);
+      throw error.response?.data || error.message || 'Lỗi đăng nhập bằng Google thất bại!';
     }
   },
 

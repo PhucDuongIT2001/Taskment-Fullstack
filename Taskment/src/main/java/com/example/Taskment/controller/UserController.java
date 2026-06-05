@@ -1,67 +1,77 @@
 package com.example.Taskment.controller;
 
-
+import com.example.Taskment.dto.ChangePasswordDto;
+import com.example.Taskment.dto.HumanInfoDTO;
+import com.example.Taskment.dto.ProjectResponseDTO; // THÊM MỚI
+import com.example.Taskment.dto.UserUpdateRequestDTO;
 import com.example.Taskment.entity.User;
-import com.example.Taskment.repository.UserRepository;
-import org.springframework.beans.factory.annotation.Autowired;
+import com.example.Taskment.service.UserService;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
+import org.springframework.web.multipart.MultipartFile;
 import java.util.List;
-import java.util.Optional;
 
-@RestController // Đánh dấu đây là nơi tiếp nhận các yêu cầu HTTP từ Postman
-@RequestMapping("/api/users") // Địa chỉ gốc của API này
+@RestController
+@RequestMapping("/api/users")
 public class UserController {
 
-    @Autowired // Tự động kết nối với UserRepository để lấy dữ liệu
-    private UserRepository userRepository;
+    private final UserService userService;
 
-    // API lấy tất cả người dùng: GET http://localhost:8080/api/users
+    public UserController(UserService userService) {
+        this.userService = userService;
+    }
+
     @GetMapping
-    public List<User> getAllUsers() {
-        return userRepository.findAll();
+    public ResponseEntity<List<User>> getAllUsers() {
+        return ResponseEntity.ok(userService.getAllUsers());
     }
 
-    // 2. READ ONE: Lấy chi tiết 1 người dùng theo ID
-    @GetMapping("/{id}")
-    public ResponseEntity<User> getUserById(@PathVariable Long id) {
-        return userRepository.findById(id)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+    @GetMapping("/{userId}/profile")
+    public ResponseEntity<HumanInfoDTO> getUserProfile(@PathVariable Long userId) {
+        return ResponseEntity.ok(userService.getProfile(userId));
     }
 
-    // API tạo một người dùng mới: POST http://localhost:8080/api/users
-    @PostMapping
-    public User createUser(@RequestBody User user) {
-        return userRepository.save(user);
+    @PutMapping("/{userId}/profile")
+    @org.springframework.security.access.prepost.PreAuthorize("#userId == authentication.principal.id or hasRole('ADMIN')")
+    public ResponseEntity<HumanInfoDTO> updateUserProfile(@PathVariable Long userId, @RequestBody HumanInfoDTO dto) {
+        return ResponseEntity.ok(userService.updateProfile(userId, dto));
     }
-    // 4. UPDATE: Sửa thông tin người dùng theo ID
-    // PUT http://localhost:8080/api/users/1
+
     @PutMapping("/{id}")
-    public ResponseEntity<User> updateUser(@PathVariable Long id, @RequestBody User userDetails) {
-        Optional<User> userOpt = userRepository.findById(id);
-        if (userOpt.isPresent()) {
-            User user = userOpt.get();
-            user.setFullName(userDetails.getFullName());
-            user.setEmail(userDetails.getEmail());
-            user.setAvatarUrl(userDetails.getAvatarUrl());
-            // Cập nhật các trường khác nếu cần
-            User updatedUser = userRepository.save(user);
-            return ResponseEntity.ok(updatedUser);
-        } else {
-            return ResponseEntity.notFound().build();
-        }
+    @org.springframework.security.access.prepost.PreAuthorize("#id == authentication.principal.id or hasRole('ADMIN')")
+    public ResponseEntity<User> updateUser(@PathVariable Long id, @RequestBody UserUpdateRequestDTO requestDTO) {
+        User updatedUser = userService.updateUser(id, requestDTO);
+        return ResponseEntity.ok(updatedUser);
     }
 
-    // 5. DELETE: Xóa người dùng theo ID
-    // DELETE http://localhost:8080/api/users/1
+    @PostMapping("/{userId}/change-password")
+    @org.springframework.security.access.prepost.PreAuthorize("#userId == authentication.principal.id or hasRole('ADMIN')")
+    public ResponseEntity<String> changePassword(@PathVariable Long userId, @RequestBody ChangePasswordDto changePasswordDto) {
+        userService.changePassword(userId, changePasswordDto);
+        return ResponseEntity.ok("Mật khẩu đã được thay đổi thành công.");
+    }
+
     @DeleteMapping("/{id}")
-    public ResponseEntity<?> deleteUser(@PathVariable Long id) {
-        if (userRepository.existsById(id)) {
-            userRepository.deleteById(id);
-            return ResponseEntity.ok("Đã xóa người dùng thành công!");
-        }
-        return ResponseEntity.notFound().build();
+    public ResponseEntity<Void> deleteUser(@PathVariable Long id) {
+        userService.deleteUser(id);
+        return ResponseEntity.noContent().build();
+    }
+
+    // THÊM MỚI: Lấy danh sách dự án mà user là thành viên
+    @GetMapping("/{userId}/projects")
+    public ResponseEntity<List<ProjectResponseDTO>> getUserProjects(@PathVariable Long userId) {
+        return ResponseEntity.ok(userService.getUserProjects(userId));
+    }
+
+    // THÊM MỚI: Upload avatar cho người dùng
+    @PostMapping("/{userId}/avatar")
+    @org.springframework.security.access.prepost.PreAuthorize("#userId == authentication.principal.id or hasRole('ADMIN')")
+    public ResponseEntity<String> uploadAvatar(
+            @PathVariable Long userId,
+            @RequestParam("file") MultipartFile file) {
+        String avatarUrl = userService.uploadAvatar(userId, file);
+        return ResponseEntity.ok(avatarUrl);
     }
 }

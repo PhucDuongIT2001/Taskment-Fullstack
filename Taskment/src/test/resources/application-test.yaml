@@ -1,0 +1,45 @@
+# =============================================================
+# Cấu hình TEST: Dùng H2 in-memory database thay cho MySQL
+# File này được dùng khi chạy test với @ActiveProfiles("test")
+# =============================================================
+
+spring:
+  datasource:
+    url: jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE;MODE=MySQL
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+
+  jpa:
+    hibernate:
+      ddl-auto: create-drop   # Tự tạo & xóa schema khi test xong
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: false
+        dialect: org.hibernate.dialect.H2Dialect
+
+  h2:
+    console:
+      enabled: false  # Không cần console trong test
+
+  # Vô hiệu hóa OAuth2 trong test
+  security:
+    oauth2:
+      client:
+        registration:
+          google:
+            client-id: test-client-id
+            client-secret: test-client-secret
+            scope:
+              - email
+              - profile
+
+# JWT config cho môi trường test
+app:
+  jwt:
+    secret: "TaskmentTestJwtSecretKeyForUnitAndIntegrationTestsOnlyNotForProduction2024!"
+    expiration-ms: 86400000  # 24 giờ
+
+server:
+  port: 0   # Random port cho integration test

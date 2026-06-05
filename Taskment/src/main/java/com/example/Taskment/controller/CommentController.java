@@ -1,40 +1,37 @@
 package com.example.Taskment.controller;
 
-import com.example.Taskment.entity.*;
-import com.example.Taskment.repository.*;
-import org.springframework.beans.factory.annotation.Autowired;
+import com.example.Taskment.dto.CommentDTO;
+import com.example.Taskment.service.CommentService;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
+
 import java.util.List;
+import java.util.Map;
 
 @RestController
-@RequestMapping("/api/comments")
+@RequestMapping("/api/tasks/{taskId}/comments")
 public class CommentController {
 
-    @Autowired private CommentRepository commentRepository;
-    @Autowired private TaskRepository taskRepository;
-    @Autowired private UserRepository userRepository;
+    private final CommentService commentService;
 
-    // 1. VIẾT BÌNH LUẬN: POST http://localhost:8080/api/comments/task/1/user/1
-    @PostMapping("/task/{taskId}/user/{userId}")
-    public Comment addComment(@PathVariable Long taskId, @PathVariable Long userId, @RequestBody Comment comment) {
-        Task task = taskRepository.findById(taskId).orElseThrow();
-        User user = userRepository.findById(userId).orElseThrow();
-
-        comment.setTask(task);
-        comment.setUser(user);
-        return commentRepository.save(comment);
+    public CommentController(CommentService commentService) {
+        this.commentService = commentService;
     }
 
-    // 2. XEM BÌNH LUẬN CỦA 1 TASK: GET http://localhost:8080/api/comments/task/1
-    @GetMapping("/task/{taskId}")
-    public List<Comment> getCommentsByTask(@PathVariable Long taskId) {
-        return commentRepository.findByTaskId(taskId);
+    @GetMapping
+    public ResponseEntity<List<CommentDTO>> getCommentsForTask(@PathVariable Long taskId) {
+        return ResponseEntity.ok(commentService.getCommentsByTaskId(taskId));
     }
 
-    // 3. XÓA BÌNH LUẬN
-    @DeleteMapping("/{id}")
-    public String deleteComment(@PathVariable Long id) {
-        commentRepository.deleteById(id);
-        return "Đã xóa bình luận!";
+    @PostMapping
+    public ResponseEntity<CommentDTO> addComment(@PathVariable Long taskId,
+                                                 @RequestBody Map<String, String> payload,
+                                                 Authentication authentication) {
+        String content = payload.get("content");
+        String username = authentication.getName();
+        CommentDTO createdComment = commentService.createComment(taskId, content, username);
+        return new ResponseEntity<>(createdComment, HttpStatus.CREATED);
     }
 }

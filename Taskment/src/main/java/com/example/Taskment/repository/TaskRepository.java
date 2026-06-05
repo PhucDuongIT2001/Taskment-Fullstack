@@ -5,12 +5,20 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+
 @Repository
 public interface TaskRepository extends JpaRepository<Task, Long> {
-    // Lấy danh sách task của một Project
+    
     List<Task> findByProjectId(Long projectId);
 
-    // Lấy danh sách task được giao cho một User cụ thể (assignee)
-    List<Task> findByAssigneeId(Long userId);
-}
+    List<Task> findByAssigneeId(Long assigneeId);
 
+    // Lấy danh sách task do một User cụ thể tạo ra (reporter)
+    List<Task> findByReporterId(Long reporterId);
+
+    List<Task> findBySprintId(Long sprintId);
+
+    List<Task> findByParentTaskId(Long parentId);
+    
+    List<Task> findByIssueTypeId(Long issueTypeId);
+}

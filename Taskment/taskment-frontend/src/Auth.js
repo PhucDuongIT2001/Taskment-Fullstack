@@ -3,7 +3,7 @@ import Login from './Login';
 import Register from './Register';
 import './Auth.css'; // Import file CSS mới tạo
 
-function Auth({ login, register }) {
+function Auth({ login, verify2FA, register }) {
   const [isLogin, setIsLogin] = useState(true);
 
   return (
@@ -12,6 +12,7 @@ function Auth({ login, register }) {
         <Login 
           onToggle={() => setIsLogin(false)} 
           onLogin={login} 
+          onVerify2FA={verify2FA}
         />
       ) : (
         <Register 

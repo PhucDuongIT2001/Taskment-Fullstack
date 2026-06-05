@@ -7,4 +7,5 @@ import java.util.List;
 public interface CommentRepository extends JpaRepository<Comment, Long> {
     // Lấy tất cả bình luận của một Task cụ thể
     List<Comment> findByTaskId(Long taskId);
+    List<Comment> findByTaskIdOrderByCreatedAtAsc(Long taskId);
 }

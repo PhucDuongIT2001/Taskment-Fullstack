@@ -1,155 +1,241 @@
 import React, { useState, useEffect } from 'react';
+import { useParams, Link } from 'react-router-dom';
 import './Profile.css';
+import UserService from './services/UserService';
+import { toast } from 'react-toastify';
+import useAuth from './useAuth';
 
-function Profile({ userId }) {
-  const [user, setUser] = useState(null);
+function Profile() {
+  const { userId } = useParams();
+  const { currentUser } = useAuth();
+  const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   
-  // State quản lý việc bật/tắt chế độ chỉnh sửa và lưu dữ liệu Form
-  const [isEditing, setIsEditing] = useState(false);
-  const [editData, setEditData] = useState({ fullName: '', dateOfBirth: '', avatarUrl: '' });
+  const [isBasicInfoEditing, setIsBasicInfoEditing] = useState(false);
+  const [basicFormData, setBasicFormData] = useState({
+      email: '',
+      fullName: '',
+      firstName: '',
+      lastName: '',
+      phoneNumber: '',
+      address: '',
+      dateOfBirth: '',
+      avatarUrl: '',
+      gender: '',
+      bio: ''
+  });
 
-  // Hàm hỗ trợ định dạng ngày tháng từ YYYY-MM-DD sang DD/MM/YYYY để hiển thị đẹp hơn
-  const formatDate = (dateString) => {
-    if (!dateString) return "Chưa cập nhật";
-    const parts = dateString.split('-'); // Tách năm, tháng, ngày
-    if (parts.length === 3) return `${parts[2]}/${parts[1]}/${parts[0]}`; // Đảo ngược lại
-    return dateString;
-  };
+  const [isPasswordEditing, setIsPasswordEditing] = useState(false);
+  const [passwordFormData, setPasswordFormData] = useState({
+      oldPassword: '',
+      newPassword: '',
+      confirmNewPassword: ''
+  });
 
   useEffect(() => {
-    // Gọi API từ UserController: GET /api/users/{id}
-    const fetchUserId = userId; 
-    
-    // Sửa tại đây: Nếu không có ID, báo lỗi và tắt loading
-    if (!fetchUserId) {
-      setError("Không nhận được ID người dùng. Vui lòng thử đăng xuất và đăng nhập lại.");
+    // THÊM KIỂM TRA: Chỉ gọi API khi userId có giá trị hợp lệ
+    if (userId && userId !== 'undefined') {
+      setLoading(true);
+      UserService.getProfile(userId)
+        .then(response => {
+          setProfile(response.data);
+          setBasicFormData({
+              email: response.data.email || '',
+              fullName: response.data.fullName || '',
+              firstName: response.data.firstName || '',
+              lastName: response.data.lastName || '',
+              phoneNumber: response.data.phoneNumber || '',
+              address: response.data.address || '',
+              dateOfBirth: response.data.dateOfBirth || '',
+              avatarUrl: response.data.avatarUrl || '',
+              gender: response.data.gender || '',
+              bio: response.data.bio || ''
+          });
+        })
+        .catch(err => {
+          setError(err.response?.data?.message || "Không thể tải thông tin hồ sơ.");
+        })
+        .finally(() => {
+          setLoading(false);
+        });
+    } else {
+      setError("ID người dùng không hợp lệ.");
       setLoading(false);
-      return; 
     }
-    
-    fetch(`http://localhost:8080/api/users/${fetchUserId}`)
-      .then(response => {
-        if (!response.ok) {
-          throw new Error('Không thể tải thông tin người dùng');
-        }
-        return response.json();
-      })
-      .then(data => {
-        setUser(data);
-        setLoading(false);
-      })
-      .catch(err => {
-        setError(err.message);
-        setLoading(false);
-      });
   }, [userId]);
 
-  // Hàm xử lý khi bấm nút "Chỉnh sửa"
-  const handleEditClick = () => {
-    setEditData({
-      fullName: user.fullName || '',
-      dateOfBirth: user.dateOfBirth || '',
-      avatarUrl: user.avatarUrl || ''
-    });
-    setIsEditing(true); // Bật form lên
+  const handleBasicInfoChange = (e) => {
+    setBasicFormData({ ...basicFormData, [e.target.name]: e.target.value });
   };
 
-  // Hàm xử lý khi bấm "Lưu" -> Gọi API PUT xuống Spring Boot
-  const handleSave = async () => {
+  const handleBasicInfoSave = async (e) => {
+    e.preventDefault();
     try {
-      const response = await fetch(`http://localhost:8080/api/users/${userId}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        // Trộn dữ liệu cũ của user với dữ liệu mới từ form
-        body: JSON.stringify({ ...user, ...editData }) 
-      });
-      if (response.ok) {
-        const updatedUser = await response.json();
-        setUser(updatedUser); // Cập nhật lại giao diện bằng dữ liệu mới nhất
-        setIsEditing(false);  // Tắt form đi
-      } else {
-        alert("Lỗi khi cập nhật!");
-      }
+      const response = await UserService.updateProfile(userId, basicFormData);
+      setProfile(response.data);
+      setIsBasicInfoEditing(false);
+      toast.success("🎉 Cập nhật thông tin cơ bản thành công!");
     } catch (err) {
-      alert("Lỗi kết nối đến server!");
+      toast.error("❌ Lỗi khi cập nhật: " + (err.response?.data?.message || err.message));
+    }
+  };
+
+  const handleBasicInfoCancel = () => {
+    setIsBasicInfoEditing(false);
+    setBasicFormData({
+        email: profile.email || '',
+        fullName: profile.fullName || '',
+        firstName: profile.firstName || '',
+        lastName: profile.lastName || '',
+        phoneNumber: profile.phoneNumber || '',
+        address: profile.address || '',
+        dateOfBirth: profile.dateOfBirth || '',
+        avatarUrl: profile.avatarUrl || '',
+        gender: profile.gender || '',
+        bio: profile.bio || ''
+    });
+  };
+
+  const handlePasswordFormChange = (e) => {
+    setPasswordFormData({ ...passwordFormData, [e.target.name]: e.target.value });
+  };
+
+  const handleChangePassword = async (e) => {
+    e.preventDefault();
+    if (passwordFormData.newPassword !== passwordFormData.confirmNewPassword) {
+        toast.error("❌ Mật khẩu mới và xác nhận mật khẩu không khớp!");
+        return;
+    }
+    if (!passwordFormData.oldPassword || !passwordFormData.newPassword) {
+        toast.error("❌ Vui lòng nhập đầy đủ mật khẩu cũ và mật khẩu mới!");
+        return;
+    }
+
+    try {
+        await UserService.changePassword(userId, { 
+            oldPassword: passwordFormData.oldPassword, 
+            newPassword: passwordFormData.newPassword 
+        });
+        toast.success("🔑 Mật khẩu đã được thay đổi thành công!");
+        setIsPasswordEditing(false);
+        setPasswordFormData({ oldPassword: '', newPassword: '', confirmNewPassword: '' });
+    } catch (err) {
+        toast.error("❌ Lỗi khi đổi mật khẩu: " + (err.response?.data?.message || err.message));
     }
   };
 
   if (loading) return <div className="profile-loading">Đang tải thông tin...</div>;
   if (error) return <div className="profile-error">Lỗi: {error}</div>;
-  if (!user) return <div className="profile-error">Không tìm thấy dữ liệu người dùng.</div>;
+  if (!profile) return <div className="profile-error">Không tìm thấy dữ liệu hồ sơ.</div>;
+
+  const isOwner = currentUser && currentUser.id === parseInt(userId);
 
   return (
-    <div className="profile-container">
-      {/* Phần header: Ảnh đại diện và Thông tin cơ bản */}
-      <div className="profile-header">
-        <img 
-          src={user.avatarUrl || "https://cdn-icons-png.flaticon.com/512/149/149071.png"} 
-          alt="Avatar" 
-          className="profile-avatar"
-        />
-        <div className="profile-info-basic">
-          {/* Giao diện thay đổi dựa trên state isEditing */}
-          {isEditing ? (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginTop: '10px' }}>
-              <input 
-                type="text" 
-                value={editData.fullName} 
-                onChange={e => setEditData({...editData, fullName: e.target.value})} 
-                placeholder="Nhập họ và tên" 
-                style={{ padding: '8px', borderRadius: '5px', border: '1px solid #ccc' }}
-              />
-              <input 
-                type="date" 
-                value={editData.dateOfBirth} 
-                onChange={e => setEditData({...editData, dateOfBirth: e.target.value})} 
-                style={{ padding: '8px', borderRadius: '5px', border: '1px solid #ccc' }}
-              />
-              <input 
-                type="url" 
-                value={editData.avatarUrl} 
-                onChange={e => setEditData({...editData, avatarUrl: e.target.value})} 
-                placeholder="Nhập link ảnh đại diện (VD: https://...)" 
-                style={{ padding: '8px', borderRadius: '5px', border: '1px solid #ccc' }}
-              />
-              <div style={{ display: 'flex', gap: '10px' }}>
-                <button onClick={handleSave} className="submit-btn" style={{ margin: 0, padding: '5px 15px', width: 'auto' }}>💾 Lưu</button>
-                <button onClick={() => setIsEditing(false)} className="delete-btn" style={{ padding: '5px 15px', width: 'auto' }}>❌ Hủy</button>
-              </div>
-            </div>
-          ) : (
-            <>
-              <h2 className="profile-name">{user.fullName || "Chưa cập nhật tên"}</h2>
-              <p className="profile-email">✉️ {user.email || "Chưa cập nhật email"}</p>
-              {/* Sử dụng hàm formatDate để xuất ra màn hình */}
-              <p className="profile-dob">🎂 Ngày sinh: {formatDate(user.dateOfBirth)}</p>
-              <button onClick={handleEditClick} className="submit-btn" style={{ width: 'fit-content', padding: '5px 15px', marginTop: '10px' }}>
-                ✏️ Chỉnh sửa hồ sơ
-              </button>
-            </>
-          )}
+    <div className="profile-page-layout">
+      <div className="profile-sidebar card">
+        <div className="profile-avatar-section">
+            <img 
+              src={basicFormData.avatarUrl || "https://cdn-icons-png.flaticon.com/512/149/149071.png"}
+              alt="Avatar" 
+              className="profile-avatar"
+            />
+            <h3 className="profile-sidebar-name">{profile.fullName || profile.username}</h3>
+            <p className="profile-sidebar-email">{profile.email}</p>
         </div>
+        <nav className="profile-nav">
+            <button className="profile-nav-item active">Thông tin chung</button>
+            {isOwner && <button className="profile-nav-item" onClick={() => setIsPasswordEditing(true)}>Bảo mật</button>}
+        </nav>
       </div>
 
-      {/* Phần chi tiết: Các dự án tham gia */}
-      <div className="profile-projects-section">
-        <h3 className="section-title">📂 Các dự án tham gia</h3>
-        {user.projects && user.projects.length > 0 ? (
-          <div className="projects-grid">
-            {user.projects.map((project, index) => (
-              <div key={index} className="project-card">
-                <h4 className="project-title">{project.name}</h4>
-                <p className="project-role">Vai trò: {project.role || "Thành viên"}</p>
-                <span className="project-status">{project.status || "Đang hoạt động"}</span>
-              </div>
-            ))}
-          </div>
-        ) : (
-          <p className="no-projects-text">
-            Người dùng này hiện chưa tham gia dự án nào.
-          </p>
+      <div className="profile-main-content">
+        <div className="card profile-section">
+            <div className="profile-section-header">
+                <h2>Thông tin cơ bản</h2>
+                {isOwner && !isBasicInfoEditing && (
+                    <button onClick={() => setIsBasicInfoEditing(true)} className="submit-btn small">
+                        ✏️ Chỉnh sửa
+                    </button>
+                )}
+            </div>
+            <form onSubmit={handleBasicInfoSave}>
+                <div className="form-group">
+                    <label>Tên hiển thị</label>
+                    <input type="text" name="fullName" value={basicFormData.fullName} onChange={handleBasicInfoChange} disabled={!isBasicInfoEditing} />
+                </div>
+                <div className="form-group">
+                    <label>Email</label>
+                    <input type="email" name="email" value={basicFormData.email} onChange={handleBasicInfoChange} disabled={!isBasicInfoEditing} />
+                </div>
+                <div className="form-row">
+                    <div className="form-group">
+                        <label>Họ</label>
+                        <input type="text" name="firstName" value={basicFormData.firstName} onChange={handleBasicInfoChange} disabled={!isBasicInfoEditing} />
+                    </div>
+                    <div className="form-group">
+                        <label>Tên</label>
+                        <input type="text" name="lastName" value={basicFormData.lastName} onChange={handleBasicInfoChange} disabled={!isBasicInfoEditing} />
+                    </div>
+                </div>
+                <div className="form-row">
+                    <div className="form-group">
+                        <label>Số điện thoại</label>
+                        <input type="tel" name="phoneNumber" value={basicFormData.phoneNumber} onChange={handleBasicInfoChange} disabled={!isBasicInfoEditing} />
+                    </div>
+                    <div className="form-group">
+                        <label>Ngày sinh</label>
+                        <input type="date" name="dateOfBirth" value={basicFormData.dateOfBirth} onChange={handleBasicInfoChange} disabled={!isBasicInfoEditing} />
+                    </div>
+                </div>
+                <div className="form-group">
+                    <label>Địa chỉ</label>
+                    <input type="text" name="address" value={basicFormData.address} onChange={handleBasicInfoChange} disabled={!isBasicInfoEditing} />
+                </div>
+                <div className="form-group">
+                    <label>Link ảnh đại diện</label>
+                    <input type="url" name="avatarUrl" value={basicFormData.avatarUrl} onChange={handleBasicInfoChange} disabled={!isBasicInfoEditing} />
+                </div>
+                <div className="form-group">
+                    <label>Giới thiệu bản thân (Bio)</label>
+                    <textarea name="bio" value={basicFormData.bio} onChange={handleBasicInfoChange} disabled={!isBasicInfoEditing}></textarea>
+                </div>
+
+                {isBasicInfoEditing && (
+                    <div className="modal-actions">
+                        <button type="submit" className="submit-btn primary">💾 Lưu thay đổi</button>
+                        <button type="button" className="cancel-btn" onClick={handleBasicInfoCancel}>Hủy</button>
+                    </div>
+                )}
+            </form>
+        </div>
+
+        {isPasswordEditing && isOwner && (
+            <div className="card profile-section" style={{ marginTop: '20px' }}>
+                <div className="profile-section-header">
+                    <h2>Bảo mật</h2>
+                    <button onClick={() => setIsPasswordEditing(false)} className="cancel-btn small">
+                        ❌ Đóng
+                    </button>
+                </div>
+                <form onSubmit={handleChangePassword}>
+                    <div className="form-group">
+                        <label>Mật khẩu cũ</label>
+                        <input type="password" name="oldPassword" value={passwordFormData.oldPassword} onChange={handlePasswordFormChange} required />
+                    </div>
+                    <div className="form-group">
+                        <label>Mật khẩu mới</label>
+                        <input type="password" name="newPassword" value={passwordFormData.newPassword} onChange={handlePasswordFormChange} required />
+                    </div>
+                    <div className="form-group">
+                        <label>Xác nhận mật khẩu mới</label>
+                        <input type="password" name="confirmNewPassword" value={passwordFormData.confirmNewPassword} onChange={handlePasswordFormChange} required />
+                    </div>
+                    <div className="modal-actions">
+                        <button type="submit" className="submit-btn primary">🔑 Đổi mật khẩu</button>
+                    </div>
+                </form>
+            </div>
         )}
       </div>
     </div>

@@ -13,8 +13,8 @@ import java.util.Date;
 @Component
 public class JwtTokenProvider {
 
-    // Khóa bí mật (phải dài ít nhất 32 ký tự đối với thuật toán HS256)
-    @Value("${app.jwtSecret:KHzlB9/n/Axg1+Kk7J8i8/gP+pU9Z2ZgT+4m/Axg1+Kk7J=}")
+    // Khóa bí mật đã được tăng độ dài thành 64 ký tự (512-bit) để đáp ứng yêu cầu của JJWT 0.11.5+
+    @Value("${app.jwtSecret:KHzlB9/n/Axg1+Kk7J8i8/gP+pU9Z2ZgT+4m/Axg1+Kk7J8i8/gP+pU9Z2ZgT+4m=}")
     private String jwtSecret;
 
     // Thời hạn token: 24h

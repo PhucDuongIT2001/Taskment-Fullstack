@@ -1,0 +1,10 @@
+target/
+*.jar
+.mvn/
+mvnw
+mvnw.cmd
+.git/
+.idea/
+.vscode/
+taskment-frontend/node_modules/
+taskment-frontend/build/

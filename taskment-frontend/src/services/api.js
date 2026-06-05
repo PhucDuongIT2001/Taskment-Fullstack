@@ -1,8 +1,13 @@
 import axios from 'axios';
 
+const getBaseURL = () => {
+  const isProd = window.location.hostname !== 'localhost';
+  return isProd ? '/api' : 'http://localhost:8888/api';
+};
+
 // Create an Axios instance with base configuration
 const api = axios.create({
-  baseURL: 'http://localhost:8080/api', // Backend base URL
+  baseURL: process.env.REACT_APP_API_URL || getBaseURL(), // Backend base URL dynamic for local/production
   headers: {
     'Content-Type': 'application/json',
   },

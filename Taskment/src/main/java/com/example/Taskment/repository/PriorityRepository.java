@@ -7,6 +7,6 @@ import java.util.Optional;
 
 @Repository
 public interface PriorityRepository extends JpaRepository<Priority, Long> {
-    // Tìm mức độ ưu tiên theo tên
     Optional<Priority> findByName(String name);
+    Optional<Priority> findByNameIgnoreCase(String name);
 }
