@@ -9,4 +9,5 @@ import java.util.List;
 @Repository
 public interface AttachmentRepository extends JpaRepository<Attachment, Long> {
     List<Attachment> findByTaskId(Long taskId);
+    List<Attachment> findByTaskIdOrderByCreatedAtDesc(Long taskId);
 }

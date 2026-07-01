@@ -5,10 +5,12 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
+import java.security.Principal;
+
 import java.util.Collection;
 import java.util.stream.Collectors;
 
-public class CustomUserDetails implements UserDetails {
+public class CustomUserDetails implements UserDetails, Principal {
 
     private final User user;
 
@@ -70,5 +72,15 @@ public class CustomUserDetails implements UserDetails {
     @Override
     public boolean isEnabled() {
         return true;
+    }
+
+    @Override
+    public String getName() {
+        return user.getUsername();
+    }
+
+    @Override
+    public String toString() {
+        return user.getUsername();
     }
 }

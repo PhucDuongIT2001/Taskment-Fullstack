@@ -191,6 +191,7 @@ public class TaskService {
         task.setAssignee(creator);
         task.setReporter(creator);
         task.setIssueType(defaultIssueType);
+        task.setCustomerRequest(true);
         
         Task savedTask = taskRepository.save(task);
         
@@ -324,6 +325,7 @@ public class TaskService {
         dto.setDescription(task.getDescription());
         dto.setStoryPoints(task.getStoryPoints());
         dto.setCreatedAt(task.getCreatedAt());
+        dto.setIsCustomerRequest(task.isCustomerRequest());
 
         if (task.getProject() != null) {
             dto.setProjectId(task.getProject().getId());

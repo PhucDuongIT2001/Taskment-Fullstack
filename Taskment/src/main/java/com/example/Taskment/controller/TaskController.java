@@ -4,6 +4,8 @@ import com.example.Taskment.dto.CustomerRequestDTO;
 import com.example.Taskment.dto.TaskRequestDTO;
 import com.example.Taskment.dto.TaskResponseDTO;
 import com.example.Taskment.dto.UpdateTaskStatusRequest;
+import com.example.Taskment.entity.ActivityLog;
+import com.example.Taskment.service.ActivityLogService;
 import com.example.Taskment.service.TaskService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
@@ -18,9 +20,11 @@ import java.util.List;
 public class TaskController {
 
     private final TaskService taskService;
+    private final ActivityLogService activityLogService;
 
-    public TaskController(TaskService taskService) {
+    public TaskController(TaskService taskService, ActivityLogService activityLogService) {
         this.taskService = taskService;
+        this.activityLogService = activityLogService;
     }
 
     @GetMapping
@@ -86,5 +90,14 @@ public class TaskController {
     public ResponseEntity<Void> deleteTask(@PathVariable Long id) {
         taskService.deleteTask(id);
         return ResponseEntity.noContent().build();
+    }
+
+    /**
+     * Lấy lịch sử hoạt động của một task cụ thể
+     * GET /api/tasks/{taskId}/activities
+     */
+    @GetMapping("/{taskId}/activities")
+    public ResponseEntity<List<ActivityLog>> getTaskActivities(@PathVariable Long taskId) {
+        return ResponseEntity.ok(activityLogService.getActivitiesByTaskId(taskId));
     }
 }

@@ -19,6 +19,10 @@ public class AttachmentController {
         this.attachmentService = attachmentService;
     }
 
+    /**
+     * Upload file đính kèm cho một task
+     * POST /api/tasks/{taskId}/attachments
+     */
     @PostMapping("/tasks/{taskId}/attachments")
     public ResponseEntity<AttachmentDTO> uploadAttachment(
             @PathVariable Long taskId,
@@ -29,16 +33,38 @@ public class AttachmentController {
         return ResponseEntity.ok(dto);
     }
 
+    /**
+     * Lấy danh sách file đính kèm của một task
+     * GET /api/tasks/{taskId}/attachments
+     */
     @GetMapping("/tasks/{taskId}/attachments")
     public ResponseEntity<List<AttachmentDTO>> getAttachments(@PathVariable Long taskId) {
         List<AttachmentDTO> attachments = attachmentService.getAttachmentsByTaskId(taskId);
         return ResponseEntity.ok(attachments);
     }
 
+    /**
+     * Xóa file đính kèm theo attachmentId (path riêng)
+     * DELETE /api/attachments/{id}
+     */
     @DeleteMapping("/attachments/{id}")
     public ResponseEntity<?> deleteAttachment(@PathVariable Long id, Authentication authentication) {
         String username = authentication.getName();
         attachmentService.deleteAttachment(id, username);
+        return ResponseEntity.ok("Đã xóa tài liệu thành công");
+    }
+
+    /**
+     * Xóa file đính kèm theo taskId và attachmentId (RESTful path chuẩn)
+     * DELETE /api/tasks/{taskId}/attachments/{attachmentId}
+     */
+    @DeleteMapping("/tasks/{taskId}/attachments/{attachmentId}")
+    public ResponseEntity<?> deleteAttachmentByTask(
+            @PathVariable Long taskId,
+            @PathVariable Long attachmentId,
+            Authentication authentication) {
+        String username = authentication.getName();
+        attachmentService.deleteAttachment(attachmentId, username);
         return ResponseEntity.ok("Đã xóa tài liệu thành công");
     }
 }

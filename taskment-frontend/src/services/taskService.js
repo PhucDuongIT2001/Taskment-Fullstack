@@ -65,6 +65,22 @@ const taskService = {
   deleteTask: async (taskId) => {
     const response = await api.delete(`/tasks/${taskId}`);
     return response.data;
+  },
+
+  /**
+   * Lấy danh sách yêu cầu của khách hàng hiện tại
+   */
+  getMyRequests: async () => {
+    const response = await api.get('/tasks/my-requests');
+    return response.data;
+  },
+
+  /**
+   * Tạo yêu cầu khách hàng mới
+   */
+  createCustomerRequest: async (payload) => {
+    const response = await api.post('/tasks/customer-request', payload);
+    return response.data;
   }
 };
 

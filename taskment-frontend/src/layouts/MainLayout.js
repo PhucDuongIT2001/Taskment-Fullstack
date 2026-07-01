@@ -205,13 +205,20 @@ const MainLayout = () => {
     }
   };
 
-  const navItems = [
-    { name: 'Dashboard', path: '/dashboard', icon: <FiHome /> },
-    { name: 'My Tasks', path: '/tasks', icon: <FiCheckSquare /> },
-    { name: 'Projects', path: '/projects', icon: <FiFolder /> },
-    { name: 'Team', path: '/team', icon: <FiUsers /> },
-    { name: 'Settings', path: '/settings', icon: <FiSettings /> },
-  ];
+  const isCustomer = user && user.roles && user.roles.some(r => r.role === 'ROLE_CUSTOMER');
+
+  const navItems = isCustomer
+    ? [
+        { name: 'Dashboard', path: '/dashboard', icon: <FiHome /> },
+        { name: 'Yêu cầu của tôi', path: '/my-requests', icon: <FiCheckSquare /> }
+      ]
+    : [
+        { name: 'Dashboard', path: '/dashboard', icon: <FiHome /> },
+        { name: 'My Tasks', path: '/tasks', icon: <FiCheckSquare /> },
+        { name: 'Projects', path: '/projects', icon: <FiFolder /> },
+        { name: 'Team', path: '/team', icon: <FiUsers /> },
+        { name: 'Settings', path: '/settings', icon: <FiSettings /> },
+      ];
 
   return (
     <div className="app-container">

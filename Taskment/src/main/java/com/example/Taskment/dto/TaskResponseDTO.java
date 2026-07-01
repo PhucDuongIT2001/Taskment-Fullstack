@@ -12,6 +12,7 @@ public class TaskResponseDTO {
     private LocalDateTime dueDate;
     private Long remainingHours;
     private Boolean overdue;
+    private Boolean isCustomerRequest;
 
     // Thay vì trả về toàn bộ Object chứa cả chục trường dữ liệu của Project,
     // ta chỉ trả về các thông tin cần thiết nhất (VD: tên project)
@@ -227,5 +228,13 @@ public class TaskResponseDTO {
 
     public void setAssigneeName(String assigneeName) {
         this.assigneeName = assigneeName;
+    }
+
+    public Boolean getIsCustomerRequest() {
+        return isCustomerRequest;
+    }
+
+    public void setIsCustomerRequest(Boolean isCustomerRequest) {
+        this.isCustomerRequest = isCustomerRequest;
     }
 }

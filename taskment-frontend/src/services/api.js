@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const getBaseURL = () => {
-  const isProd = window.location.hostname !== 'localhost';
+  const isProd = window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1';
   return isProd ? '/api' : 'http://localhost:8888/api';
 };
 

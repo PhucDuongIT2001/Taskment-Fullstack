@@ -12,6 +12,7 @@ const TasksPage = () => {
   // Modal state
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [taskToEdit, setTaskToEdit] = useState(null);
+  const [filterTab, setFilterTab] = useState('all');
 
   const fetchTasks = async () => {
     try {
@@ -34,6 +35,21 @@ const TasksPage = () => {
   useEffect(() => {
     fetchTasks();
   }, []);
+
+  // Filter logic
+  const filteredTasks = tasks.filter(task => {
+    const isCompleted = task.statusName?.toLowerCase() === 'done' || task.statusName?.toLowerCase() === 'hoàn thành';
+    if (filterTab === 'incomplete') {
+      return !isCompleted;
+    }
+    if (filterTab === 'completed') {
+      return isCompleted;
+    }
+    if (filterTab === 'customer') {
+      return task.isCustomerRequest === true;
+    }
+    return true; // 'all'
+  });
 
   // Handlers for TaskItem
   const handleEditTask = (task) => {
@@ -118,9 +134,34 @@ const TasksPage = () => {
       <div className="glass-panel" style={{ padding: '1.5rem', minHeight: '400px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1.5rem', borderBottom: '1px solid var(--border-color)', paddingBottom: '1rem' }}>
           <div style={{ display: 'flex', gap: '1rem' }}>
-            <button className="text-sm" style={{ background: 'none', border: 'none', color: 'var(--accent-primary)', fontWeight: 600 }}>Tất cả</button>
-            <button className="text-sm text-muted" style={{ background: 'none', border: 'none' }}>Chưa hoàn thành</button>
-            <button className="text-sm text-muted" style={{ background: 'none', border: 'none' }}>Đã hoàn thành</button>
+            <button 
+              className="text-sm" 
+              onClick={() => setFilterTab('all')}
+              style={{ background: 'none', border: 'none', color: filterTab === 'all' ? 'var(--accent-primary)' : 'var(--text-muted)', fontWeight: filterTab === 'all' ? 600 : 400, cursor: 'pointer' }}
+            >
+              Tất cả ({tasks.length})
+            </button>
+            <button 
+              className="text-sm" 
+              onClick={() => setFilterTab('incomplete')}
+              style={{ background: 'none', border: 'none', color: filterTab === 'incomplete' ? 'var(--accent-primary)' : 'var(--text-muted)', fontWeight: filterTab === 'incomplete' ? 600 : 400, cursor: 'pointer' }}
+            >
+              Chưa hoàn thành ({tasks.filter(t => t.statusName?.toLowerCase() !== 'done' && t.statusName?.toLowerCase() !== 'hoàn thành').length})
+            </button>
+            <button 
+              className="text-sm" 
+              onClick={() => setFilterTab('completed')}
+              style={{ background: 'none', border: 'none', color: filterTab === 'completed' ? 'var(--accent-primary)' : 'var(--text-muted)', fontWeight: filterTab === 'completed' ? 600 : 400, cursor: 'pointer' }}
+            >
+              Đã hoàn thành ({tasks.filter(t => t.statusName?.toLowerCase() === 'done' || t.statusName?.toLowerCase() === 'hoàn thành').length})
+            </button>
+            <button 
+              className="text-sm" 
+              onClick={() => setFilterTab('customer')}
+              style={{ background: 'none', border: 'none', color: filterTab === 'customer' ? 'var(--accent-primary)' : 'var(--text-muted)', fontWeight: filterTab === 'customer' ? 600 : 400, cursor: 'pointer' }}
+            >
+              Yêu cầu Khách hàng ({tasks.filter(t => t.isCustomerRequest === true).length})
+            </button>
           </div>
           <button className="text-sm text-muted" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: 'none', border: 'none' }}>
             <FiFilter /> Lọc
@@ -131,13 +172,13 @@ const TasksPage = () => {
           <div style={{ textAlign: 'center', padding: '3rem 0', color: 'var(--text-muted)' }}>
             Đang tải dữ liệu...
           </div>
-        ) : tasks.length === 0 ? (
+        ) : filteredTasks.length === 0 ? (
           <div style={{ textAlign: 'center', padding: '3rem 0', color: 'var(--text-muted)' }}>
-            Chưa có công việc nào. Hãy tạo một công việc mới!
+            Không có công việc nào phù hợp.
           </div>
         ) : (
           <div>
-            {tasks.map(task => (
+            {filteredTasks.map(task => (
               <TaskItem 
                 key={task.id} 
                 task={task} 

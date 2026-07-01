@@ -62,6 +62,9 @@ public class Task {
     @JoinColumn(name = "assignee_id")
     private User assignee;
 
+    @Column(name = "is_customer_request", nullable = false)
+    private boolean isCustomerRequest = false;
+
     // --- CONSTRUCTOR ---
 
     public Task() {
@@ -116,4 +119,7 @@ public class Task {
 
     public User getAssignee() { return assignee; }
     public void setAssignee(User assignee) { this.assignee = assignee; }
+
+    public boolean isCustomerRequest() { return isCustomerRequest; }
+    public void setCustomerRequest(boolean customerRequest) { isCustomerRequest = customerRequest; }
 }

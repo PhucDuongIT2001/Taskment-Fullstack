@@ -26,7 +26,7 @@ export const NotificationProvider = ({ children }) => {
   }, [location.pathname, user]);
 
   const getSocketUrl = () => {
-    const isProd = window.location.hostname !== 'localhost';
+    const isProd = window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1';
     if (isProd) {
       return `${window.location.protocol === 'https:' ? 'https:' : 'http:'}//${window.location.host}/ws`;
     } else {
