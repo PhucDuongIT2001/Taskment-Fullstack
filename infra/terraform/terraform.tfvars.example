@@ -1,0 +1,36 @@
+# ============================================================
+# terraform.tfvars.example — Giá trị mẫu cho biến Terraform
+# Sao chép thành terraform.tfvars và điền giá trị thật
+# KHÔNG commit terraform.tfvars vào Git
+# ============================================================
+
+aws_region  = "ap-southeast-1"
+environment = "prod"
+owner_tag   = "taskment-team"
+
+# --- VPC ---
+vpc_cidr             = "10.0.0.0/16"
+public_subnet_cidrs  = ["10.0.1.0/24", "10.0.2.0/24"]
+private_subnet_cidrs = ["10.0.10.0/24", "10.0.11.0/24"]
+availability_zones   = ["ap-southeast-1a", "ap-southeast-1b"]
+
+# --- RDS ---
+db_name           = "taskment"
+db_username       = "taskment_admin"
+db_instance_class = "db.t3.micro"
+
+# --- ECS ---
+# Lấy URL từ: aws ecr describe-repositories
+backend_image_uri  = "123456789012.dkr.ecr.ap-southeast-1.amazonaws.com/taskment-backend:latest"
+frontend_image_uri = "123456789012.dkr.ecr.ap-southeast-1.amazonaws.com/taskment-frontend:latest"
+backend_cpu           = 512
+backend_memory        = 1024
+backend_desired_count = 2
+
+# --- Domain (bỏ trống nếu chưa có domain) ---
+domain_name     = ""  # Ví dụ: "taskment.yourdomain.com"
+certificate_arn = ""  # ARN của ACM certificate (phải ở us-east-1 cho CloudFront)
+
+# --- Secrets Manager ARNs (lấy sau khi chạy terraform apply lần đầu) ---
+db_password_secret_arn = "arn:aws:secretsmanager:ap-southeast-1:123456789012:secret:taskment/prod/db-credentials"
+app_secrets_arn        = "arn:aws:secretsmanager:ap-southeast-1:123456789012:secret:taskment/prod/app-secrets"

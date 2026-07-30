@@ -116,6 +116,28 @@
 			<artifactId>poi-ooxml</artifactId>
 			<version>5.2.3</version>
 		</dependency>
+
+		<!-- AWS SDK v2 — S3 (File Attachments Storage) -->
+		<!-- LÝ DO: Thay thế lưu file local (uploads/) bằng Amazon S3 -->
+		<!-- S3 có độ bền 99.999999999%, file không mất khi container restart -->
+		<dependency>
+			<groupId>software.amazon.awssdk</groupId>
+			<artifactId>s3</artifactId>
+		</dependency>
+		<!-- S3 Presigner — tạo URL tạm thời để download file an toàn -->
+		<dependency>
+			<groupId>software.amazon.awssdk</groupId>
+			<artifactId>s3-transfer-manager</artifactId>
+		</dependency>
+
+		<!-- Flyway — Database Migration Management -->
+		<!-- LÝ DO: Thay thế ddl-auto: update (nguy hiểm trên production) -->
+		<!-- Flyway quản lý schema thay đổi có version, rollback được -->
+		<dependency>
+			<groupId>org.flywaydb</groupId>
+			<artifactId>flyway-mysql</artifactId>
+		</dependency>
+
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-test</artifactId>
@@ -130,6 +152,14 @@
 
 	<dependencyManagement>
 		<dependencies>
+			<!-- AWS SDK v2 BOM — quản lý version tập trung cho tất cả AWS SDK modules -->
+			<dependency>
+				<groupId>software.amazon.awssdk</groupId>
+				<artifactId>bom</artifactId>
+				<version>2.25.40</version>
+				<type>pom</type>
+				<scope>import</scope>
+			</dependency>
 			<dependency>
 				<groupId>org.springframework.ai</groupId>
 				<artifactId>spring-ai-bom</artifactId>

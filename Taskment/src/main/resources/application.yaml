@@ -56,4 +56,10 @@ server:
 
 app:
   frontend-url: ${FRONTEND_URL:http://localhost:3001}
+  # Danh sách origin được phép gửi request (CORS)
+  # SecurityConfig đọc biến này — phân cách bằng dấu phẩy
+  # Production: set ALLOWED_ORIGINS=https://taskment.yourdomain.com trong ECS
+  allowed-origins: ${ALLOWED_ORIGINS:http://localhost:3000,http://localhost:3001,http://localhost:3002}
 
+server:
+  port: 8888   # Port local dev (ECS dùng 8080 qua application-prod.yaml)

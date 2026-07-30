@@ -1,18 +1,84 @@
-# Ignore global Node modules
+# ============================================================
+# .gitignore — Chuẩn Enterprise
+# ============================================================
+
+# --- Secrets & Environment Variables ---
+# QUAN TRỌNG: KHÔNG BAO GIỜ commit file chứa credentials
+.env
+.env.local
+.env.development
+.env.production
+*.env
+
+# --- Terraform ---
+# Chứa state thực tế của hạ tầng (có thể chứa secrets)
+*.tfstate
+*.tfstate.backup
+*.tfstate.*.backup
+.terraform/
+.terraform.lock.hcl
+terraform.tfvars          # Chứa giá trị biến thực tế
+infra/terraform/.terraform/
+infra/**/.terraform/
+tfplan
+*.tfplan
+
+# --- Java / Spring Boot ---
+target/
+*.class
+*.jar
+*.war
+!**/src/main/**/target/
+!**/src/test/**/target/
+spring-generated/
+logs/
+*.log
+
+# --- Maven ---
+.mvn/wrapper/maven-wrapper.jar
+!**/src/main/**/mvnw
+!**/src/test/**/mvnw
+
+# --- Node.js / React ---
 node_modules/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
-
-# Mac OS
-.DS_Store
-
-# IDEs
-.idea/
-.vscode/
-
-# Build
-target/
+.pnpm-debug.log*
 build/
 dist/
+
+# --- Docker ---
+*.dockerignore
+
+# --- IDE ---
+.idea/
+.vscode/
+*.iml
+*.iws
+*.ipr
+.classpath
+.project
+.settings/
+*.swp
+*.swo
+
+# --- OS ---
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V7
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# --- Upload thư mục local (đã chuyển sang S3) ---
+uploads/
+
+# --- Build scripts dư thừa ---
 deploy_taskment.sh
+
+# --- Temporary files ---
+*.tmp
+*.bak
+*.orig

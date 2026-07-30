@@ -1,16 +1,54 @@
+# ============================================================
+# application-prod.yaml — Cấu hình Production
+# Tất cả giá trị nhạy cảm phải được lấy từ biến môi trường
+# (ECS Task Definition environment / AWS Secrets Manager)
+# ============================================================
+
 spring:
+  # --- DataSource ---
   datasource:
-    url: jdbc:mysql://${DB_HOST:localhost}:3306/${DB_NAME:taskment}?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true
-    username: ${DB_USERNAME:root}
-    password: ${DB_PASSWORD:rootpassword}
+    # DB_HOST: endpoint của RDS trong Private Subnet
+    url: jdbc:mysql://${DB_HOST}:${DB_PORT:3306}/${DB_NAME:taskment}?useSSL=true&requireSSL=true&verifyServerCertificate=false&serverTimezone=Asia/Ho_Chi_Minh
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
     driver-class-name: com.mysql.cj.jdbc.Driver
+    hikari:
+      # Tối ưu connection pool cho ECS Fargate (512MB RAM)
+      maximum-pool-size: 10
+      minimum-idle: 2
+      connection-timeout: 30000       # 30s
+      idle-timeout: 600000            # 10 phút
+      max-lifetime: 1800000           # 30 phút
+      connection-test-query: SELECT 1
+
+  # --- JPA / Hibernate ---
   jpa:
     hibernate:
-      ddl-auto: update # Tự động tạo bảng
-    show-sql: false # Tắt log SQL để đỡ nặng log
+      # QUAN TRọNG: KHÔNG dùng 'update' trên production
+      # Dùng 'validate' để Hibernate kiểm tra schema khớp với entity
+      # Schema thay đổi phải thực hiện qua Flyway migration
+      ddl-auto: validate
+    show-sql: false                   # Tắt log SQL trên production (giảm log noise)
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQL8Dialect
+        jdbc:
+          time_zone: Asia/Ho_Chi_Minh
+
+  # --- Flyway (Database Migration Management) ---
+  flyway:
+    enabled: true
+    baseline-on-migrate: true         # Lần đầu deploy: tự đặt baseline nếu DB đã có sẵn dữ liệu
+    baseline-version: 0               # Bắt đầu từ version 0 (bước sang V1 ngay lần đầu)
+    locations: classpath:db/migration # Thư mục chứa file migration SQL
+    validate-on-migrate: true         # Flyway xác thực checksum mọi lần khởi động
+    out-of-order: false               # Không cho phép migration không thứ tự
+
+
+  # --- Email (Amazon SES thay vì Gmail SMTP trực tiếp) ---
   mail:
-    host: smtp.gmail.com
-    port: 587
+    host: ${SMTP_HOST:email-smtp.ap-southeast-1.amazonaws.com}
+    port: ${SMTP_PORT:587}
     username: ${SMTP_USERNAME}
     password: ${SMTP_PASSWORD}
     properties:
@@ -19,12 +57,77 @@ spring:
           auth: true
           starttls:
             enable: true
+          timeout: 5000
+          connectiontimeout: 5000
 
-# Tắt Multipart limit vì lưu trên Cloud Run sẽ bay file, 
-# Tạm thời để nguyên để lúc demo không báo lỗi
-spring.servlet.multipart.max-file-size: 10MB
-spring.servlet.multipart.max-request-size: 10MB
+  # --- File Upload ---
+  servlet:
+    multipart:
+      max-file-size: 20MB
+      max-request-size: 25MB
 
+  # --- OAuth2 (Google) ---
+  security:
+    oauth2:
+      client:
+        registration:
+          google:
+            client-id: ${GOOGLE_CLIENT_ID}
+            client-secret: ${GOOGLE_CLIENT_SECRET}
+            scope:
+              - email
+              - profile
+
+# --- Server ---
+server:
+  port: 8080                          # Port chuẩn cho container (ECS expose 8080)
+  compression:
+    enabled: true
+    mime-types: text/html,text/xml,text/plain,text/css,text/javascript,application/javascript,application/json
+    min-response-size: 1024
+
+# --- Spring Boot Actuator (ECS Health Check endpoint) ---
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+      base-path: /actuator
+  endpoint:
+    health:
+      show-details: never             # Không lộ chi tiết health trên prod
+  health:
+    db:
+      enabled: true
+    diskspace:
+      enabled: false
+
+# --- Logging — CloudWatch Container Logs ---
+# ECS Fargate gửi stdout/stderr → CloudWatch qua awslogs log driver
+# Không cần cấu hình file-based logging
+logging:
+  level:
+    root: WARN
+    com.example.Taskment: INFO
+    org.springframework.security: WARN
+    org.hibernate.SQL: OFF
+  pattern:
+    # JSON-structured logs giúp CloudWatch Insights dễ query
+    console: '{"timestamp":"%d{yyyy-MM-dd HH:mm:ss.SSS}","level":"%p","logger":"%logger{36}","message":"%msg"}%n'
+
+# --- Ứng dụng ---
 app:
-  frontend-url: ${FRONTEND_URL:http://localhost:3001}
+  frontend-url: ${FRONTEND_URL}       # Ví dụ: https://taskment.yourdomain.com
+  # CORS: danh sách domain được phép gọui request đến API
+  allowed-origins: ${ALLOWED_ORIGINS} # Ví dụ: https://taskment.yourdomain.com
 
+# --- AWS S3 (File Attachments) ---
+aws:
+  region: ${AWS_REGION:ap-southeast-1}
+  s3:
+    bucket-name: ${S3_BUCKET_NAME}    # Ví dụ: taskment-attachments-prod
+
+# --- Gemini AI ---
+gemini:
+  api:
+    key: ${GEMINI_API_KEY}
