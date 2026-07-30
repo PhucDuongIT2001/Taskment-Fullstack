@@ -45,9 +45,11 @@ jobs:
           distribution: 'temurin'
           cache: maven
 
-      - name: Run Unit Tests
+      - name: Make mvnw executable & Run Unit Tests
         working-directory: ./Taskment
-        run: ./mvnw test -B --no-transfer-progress
+        run: |
+          chmod +x mvnw
+          ./mvnw test -B --no-transfer-progress
         # Nếu test fail, pipeline dừng lại — không deploy code lỗi
 
       - name: Upload Test Results

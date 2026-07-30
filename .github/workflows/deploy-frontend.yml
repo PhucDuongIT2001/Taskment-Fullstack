@@ -49,7 +49,7 @@ jobs:
 
       - name: Install Dependencies
         working-directory: ./Taskment/taskment-frontend
-        run: npm ci --prefer-offline
+        run: npm ci
 
       - name: Build React App
         working-directory: ./Taskment/taskment-frontend
