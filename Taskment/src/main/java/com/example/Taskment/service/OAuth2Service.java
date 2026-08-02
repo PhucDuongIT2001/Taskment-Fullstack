@@ -40,11 +40,14 @@ public class OAuth2Service {
     private final String GOOGLE_USERINFO_URI = "https://www.googleapis.com/oauth2/v3/userinfo";
     // Redirect URI phải khớp với cấu hình trên Google Console.
     // Dùng biến môi trường APP_BASE_URL để tự động chọn URL đúng (local hoặc production).
-    @Value("${app.base-url:http://taskment.54.179.62.168.nip.io}")
+    @Value("${app.base-url:postmessage}")
     private String appBaseUrl;
 
     private String getRedirectUri() {
-        return appBaseUrl + "/auth/callback";
+        if (appBaseUrl == null || appBaseUrl.isBlank() || "postmessage".equalsIgnoreCase(appBaseUrl)) {
+            return "postmessage";
+        }
+        return appBaseUrl.endsWith("/") ? appBaseUrl + "auth/callback" : appBaseUrl + "/auth/callback";
     }
 
     @Transactional
@@ -57,7 +60,7 @@ public class OAuth2Service {
 
         String email = userInfo.get("email").asText();
         String fullName = userInfo.get("name").asText();
-        String pictureUrl = userInfo.get("picture").asText(); // Có thể dùng để làm avatar
+        String pictureUrl = userInfo.has("picture") ? userInfo.get("picture").asText() : null;
 
         // 3. Xử lý logic đăng nhập hoặc đăng ký
         return userRepository.findByEmail(email)
@@ -69,17 +72,36 @@ public class OAuth2Service {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
 
-        MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
-        params.add("code", authorizationCode);
-        params.add("client_id", clientId);
-        params.add("client_secret", clientSecret);
-        params.add("redirect_uri", getRedirectUri());
-        params.add("grant_type", "authorization_code");
+        String[] candidateUris = new String[] {
+            "postmessage",
+            "http://taskment-alb-538126657.ap-southeast-1.elb.amazonaws.com",
+            "http://taskment-alb-538126657.ap-southeast-1.elb.amazonaws.com/login",
+            "http://taskment-alb-538126657.ap-southeast-1.elb.amazonaws.com/login/oauth2/code/google",
+            "http://taskment.54.179.62.168.nip.io/auth/callback",
+            "http://localhost:3000",
+            "http://localhost:8888/login/oauth2/code/google"
+        };
 
-        HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<>(params, headers);
+        Exception lastException = null;
+        for (String uri : candidateUris) {
+            try {
+                MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
+                params.add("code", authorizationCode);
+                params.add("client_id", clientId);
+                params.add("client_secret", clientSecret);
+                params.add("redirect_uri", uri);
+                params.add("grant_type", "authorization_code");
 
-        ResponseEntity<JsonNode> response = restTemplate.postForEntity(GOOGLE_TOKEN_URI, request, JsonNode.class);
-        return response.getBody().get("access_token").asText();
+                HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<>(params, headers);
+                ResponseEntity<JsonNode> response = restTemplate.postForEntity(GOOGLE_TOKEN_URI, request, JsonNode.class);
+                if (response.getBody() != null && response.getBody().has("access_token")) {
+                    return response.getBody().get("access_token").asText();
+                }
+            } catch (Exception e) {
+                lastException = e;
+            }
+        }
+        throw new RuntimeException("Xác thực Google thất bại (redirect_uri mismatch). Chi tiết: " + (lastException != null ? lastException.getMessage() : "Unknown error"));
     }
 
     private JsonNode getUserInfo(String accessToken) {
